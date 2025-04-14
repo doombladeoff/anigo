@@ -14,30 +14,31 @@ import client from "@/api/shikimori/client";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-	const colorScheme = useColorScheme();
-	const [loaded] = useFonts({
-		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-	});
+    const colorScheme = useColorScheme();
+    const [loaded] = useFonts({
+        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    });
 
-	useEffect(() => {
-		if (loaded) {
-			SplashScreen.hideAsync();
-		}
-	}, [loaded]);
+    useEffect(() => {
+        if (loaded) {
+            SplashScreen.hideAsync();
+        }
+    }, [loaded]);
 
-	if (!loaded) {
-		return null;
-	}
+    if (!loaded) {
+        return null;
+    }
 
-	return (
-	<ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-		<ApolloProvider client={client}>
-			<Stack>
-				<Stack.Screen name="(tabs)" options={{headerShown: false}}/>
-				<Stack.Screen name="+not-found"/>
-			</Stack>
-			<StatusBar style="auto"/>
-		</ApolloProvider>
-	</ThemeProvider>
-	);
+    return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ApolloProvider client={client}>
+            <Stack>
+                <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
+                <Stack.Screen name="(screens)" options={{headerShown: false}}/>
+                <Stack.Screen name="+not-found"/>
+            </Stack>
+            <StatusBar style="auto"/>
+        </ApolloProvider>
+    </ThemeProvider>
+    );
 }
