@@ -1,0 +1,16 @@
+export enum OrderEnum {
+    id = "id",
+    id_desc = "id_desc",
+    ranked = "ranked",
+    kind = "kind",
+    popularity = "popularity",
+    name = "name",
+    aired_on = "aired_on",
+    episodes = "episodes",
+    status = "status",
+    random = "random",
+    ranked_random = "ranked_random",
+    ranked_shiki = "ranked_shiki",
+    created_at = "created_at",
+    created_at_desc = "created_at_desc",
+}
