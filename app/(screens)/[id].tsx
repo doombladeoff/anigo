@@ -1,7 +1,7 @@
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Image, ScrollView } from "react-native";
+import { ActivityIndicator, ScrollView } from "react-native";
 import { useEffect, useState } from "react";
 import { ShikimoriAnime } from "@/interfaces/Shikimori.interfaces";
 import { RequestProps } from "@/interfaces/ShikimoriRequest.interfaces";
@@ -13,10 +13,15 @@ import { GenresList } from "@/components/Genres";
 import { ScreenshotsList } from "@/components/Screenshots";
 import { Collapsible } from "@/components/Collapsible";
 import { useTheme } from "@react-navigation/core";
+import { Image } from "expo-image";
+import { Player } from "@/components/Player";
 
 
 const cleanedText = (text: string): string => {
-    return text.replace(/\[character=[^\]]*]([\s\S]*?)\[\/character]/g, '$1').trim();
+    return text
+    .replace(/\[character=[^\]]*]([\s\S]*?)\[\/character]/g, '$1')
+    .replace(/\[i]([\s\S]*?)\[\/i]/g, '$1')
+    .trim();
 };
 export default function AnimeScreen() {
     const {id: malId} = useLocalSearchParams();
@@ -68,6 +73,9 @@ export default function AnimeScreen() {
                     position: 'absolute',
                 }}
                 blurRadius={3}
+                priority={'normal'}
+                cachePolicy={'disk'}
+
                 />
                 <LinearGradient
                 colors={
@@ -88,6 +96,8 @@ export default function AnimeScreen() {
                     shadowOffset: {width: 4, height: 4},
                     marginTop: 50
                 }}
+                cachePolicy={'disk'}
+                priority={'high'}
                 />
 
                 <ThemedText type="title" style={{fontSize: 18, alignSelf: 'center', marginTop: 10}}
@@ -114,6 +124,7 @@ export default function AnimeScreen() {
                 containerStyle={{paddingHorizontal: 10, gap: 10, paddingTop: 10}}
                 />
 
+                <Player malId={Number(data?.malId)}/>
             </ScrollView>
         </ThemedView>
     </>
