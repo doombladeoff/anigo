@@ -2,53 +2,42 @@ import { useEffect, useState } from "react";
 import { RequestProps } from "@/interfaces/ShikimoriRequest.interfaces";
 import { OrderEnum } from "@/constants/OrderEnum";
 import { getAnimeList } from "@/api/shikimori/getAnimes";
-import { Dimensions, FlatList, Image, Pressable, View, ViewStyle } from "react-native";
+import { Dimensions, FlatList, Pressable, TextStyle, View, ViewStyle } from "react-native";
 import { ShikimoriAnime } from "@/interfaces/Shikimori.interfaces";
 import { ThemedText } from "@/components/ThemedText";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { router } from "expo-router";
+import { Image } from "expo-image";
+import { isLoading } from "expo-font";
 
 interface AnimeListProps {
     headerText?: string;
+    headerTextStyle?: TextStyle;
     headerShow?: boolean;
     containerStyle?: ViewStyle;
     headerContentStyle?: ViewStyle;
+    showType?: 'Top' | 'OnScreens';
+    animeList?: ShikimoriAnime[];
+    isLoading?: boolean;
 }
 
 const screenWidth = Dimensions.get('window').width;
-const imageWidth = screenWidth * 0.4;
-const imageHeight = imageWidth * 1.5;
+const imageWidth = screenWidth * 0.36;
+const imageHeight = imageWidth * 1.44;
 
 
 export const AnimeList = ({
                               headerText = 'Header',
+                              headerTextStyle,
                               headerShow = true,
                               containerStyle,
-                              headerContentStyle
+                              headerContentStyle,
+                              showType = 'Top',
+                              animeList,
+                              isLoading = false
                           }: AnimeListProps) => {
     const iconColor = useThemeColor({dark: 'white', light: 'dark'}, 'icon');
-    const [animeList, setAnimeList] = useState<ShikimoriAnime[]>();
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const props: RequestProps = {
-                kind: ['tv'],
-                status: ['ongoing', "released"],
-                limit: 5,
-                duration: ['D', "F"],
-                rating: ['pg_13', "r"],
-                order: OrderEnum.ranked,
-            };
-
-            const result = await getAnimeList(props);
-            setAnimeList(result);
-        };
-
-        fetchData()
-        .then(() => setIsLoading(false));
-    }, []);
 
     if (isLoading) {
         const arr = new Array(4).fill(null)
@@ -67,10 +56,17 @@ export const AnimeList = ({
     }
 
     const _renderItem = ({item}: {item: ShikimoriAnime}) => (
-    <Pressable onPress={() => router.navigate({pathname: '/(screens)/[id]', params: {id: item.malId}})}>
+    <Pressable onPress={() => router.push({pathname: '/(screens)/[id]', params: {id: item.malId}})}>
         <Image
         source={{uri: item.poster.originalUrl}}
-        style={{width: imageWidth, height: imageHeight, borderRadius: 12}}
+        style={{
+            width: imageWidth,
+            height: imageHeight,
+            borderRadius: 12,
+        }}
+        transition={400}
+        cachePolicy={"disk"}
+        priority={'high'}
         />
     </Pressable>
 
@@ -84,7 +80,7 @@ export const AnimeList = ({
             justifyContent: 'space-between',
             marginBottom: 8
         }, headerContentStyle]}>
-            <ThemedText type='title'>{headerText}</ThemedText>
+            <ThemedText type='title' style={headerTextStyle}>{headerText}</ThemedText>
             <FontAwesome6 name="chevron-right" size={24} color={iconColor}/>
         </View>
         )}
