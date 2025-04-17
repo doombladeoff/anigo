@@ -6,6 +6,7 @@ import { ScrollView, View } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { useAnimeList } from "@/hooks/useAnimeList";
 import { onScreenProps, topProps } from "@/constants/QLRequestProps";
+import { Recomendations } from "@/components/Recomendations";
 
 const listStyles = {
   containerStyle: { paddingHorizontal: 10, gap: 10 },

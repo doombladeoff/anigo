@@ -118,7 +118,7 @@ export const AnimeList = ({
             onPress={() => {
               setAnimeListContext(animeListData || []);
               router.push({
-                pathname: "/(tabs)/home/pages/animelist",
+                pathname: "/(tabs)/(home)/pages/animelist",
                 params: {
                   headerText,
                   paramRequest: JSON.stringify(queryProps),

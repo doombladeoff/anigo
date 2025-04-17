@@ -1,26 +1,31 @@
 import { router, Stack } from "expo-router";
-import { Pressable, TouchableOpacity } from "react-native";
 import { AntDesign, FontAwesome6 } from "@expo/vector-icons";
+import { HeaderButton } from "@react-navigation/elements";
 
 export default function ScreensLayout() {
-    return (
-    <Stack screenOptions={{
+  return (
+    <Stack
+      screenOptions={{
         headerShown: true,
         headerTransparent: true,
-        headerBlurEffect: 'regular',
-        headerLeft: () => <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => {
-            router.back()
-        }}
-        >
-            <FontAwesome6 name="arrow-left" size={23} color="white"/>
-        </TouchableOpacity>,
-        headerRight: () => <TouchableOpacity>
-            <AntDesign name='staro' size={23} color="white"/>
-        </TouchableOpacity>,
-    }}>
-        <Stack.Screen name="[id]"/>
+        headerBlurEffect: "regular",
+        headerLeft: () => {
+          return (
+            <HeaderButton onPress={() => router.back()} pressOpacity={0.8}>
+              <FontAwesome6 name="arrow-left" size={23} color="white" />
+            </HeaderButton>
+          );
+        },
+        headerRight: () => {
+          return (
+            <HeaderButton pressOpacity={0.8}>
+              <AntDesign name="staro" size={23} color="white" />
+            </HeaderButton>
+          );
+        },
+      }}
+    >
+      <Stack.Screen name="[id]" />
     </Stack>
-    )
+  );
 }
