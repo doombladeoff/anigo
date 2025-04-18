@@ -6,6 +6,7 @@ import { KodikAPI } from "@/api/kodik";
 import { SelectPicker } from "@/components/SelectPicker";
 import { ThemedText } from "@/components/ThemedText";
 import { FontAwesome6 } from "@expo/vector-icons";
+import { Client } from "kodikwrapper";
 
 type Voicer = {
     id: number;
@@ -33,15 +34,29 @@ export const Player = ({malId}: PlayerProps) => {
                     tokenRef.current = await KodikAPI.getToken();
                 }
 
-                const voicersData = await KodikAPI.getVoicers({
-                    token: tokenRef.current || "",
-                    shikiTitleId: malId,
-                });
+                const client = Client.fromToken(tokenRef.current || "");
+                const voiceData = await client.search({
+                    shikimori_id: malId,
+                    episode: 1,
+                })
+                const allTranslations = voiceData.results.map(item => item.translation).filter(Boolean);
+                console.log(allTranslations)
 
-                if (!voicersData) return setVoicers([]);
+                if (!allTranslations) return setVoicers([]);
 
-                setVoicers(voicersData);
-                setSelectedCaster(voicersData[0] || null);
+                setVoicers(allTranslations);
+                setSelectedCaster(allTranslations[0] || null);
+
+
+                // const voicersData = await KodikAPI.getVoicers({
+                //     token: tokenRef.current || "",
+                //     shikiTitleId: malId,
+                // });
+
+                // if (!voicersData) return setVoicers([]);
+                //
+                // setVoicers(voicersData);
+                // setSelectedCaster(voicersData[0] || null);
 
             } catch (error) {
                 console.error("Ошибка при получении озвучек:", error);
