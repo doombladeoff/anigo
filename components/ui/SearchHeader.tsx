@@ -1,4 +1,13 @@
-import { Dimensions, Modal, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import {
+    Dimensions,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet, Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -8,10 +17,10 @@ import { useEffect, useRef, useState } from "react";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { ThemedText } from "@/components/ThemedText";
 import { RequestProps } from "@/interfaces/ShikimoriRequest.interfaces";
+import { ThemedView } from "@/components/ThemedView";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
-const {width , height} = Dimensions.get("screen");
-const screenWidth = width;
-const HWSize = {width, height};
+const screenWidth = Dimensions.get("screen").width;
 
 const kindOptions: { value: NonNullable<RequestProps['kind']>[number]; label: string }[] = [
     {value: "tv", label: "ТВ"},
@@ -59,15 +68,17 @@ const createToggleHandler = <T extends string>(
 };
 
 const FilterGroup = <T extends string>({
-                                           title,
-                                           options,
-                                           selected,
-                                           onSelect,
-                                       }: {
+    title,
+    options,
+    selected,
+    onSelect,
+    iconColor
+}: {
     title: string;
     options: { value: T; label: string }[];
     selected?: T[];
     onSelect: (value: T) => void;
+    iconColor: string;
 }) => (
     <View style={{marginBottom: 20}}>
         <ThemedText style={{fontSize: 18, fontWeight: 'bold', marginBottom: 10}}>{title}</ThemedText>
@@ -89,7 +100,7 @@ const FilterGroup = <T extends string>({
                     <MaterialCommunityIcons
                         name={selected?.includes(value) ? 'checkbox-marked' : 'checkbox-blank-outline'}
                         size={30}
-                        color="white"
+                        color={iconColor}
                     />
                     <ThemedText>{label}</ThemedText>
                 </TouchableOpacity>
@@ -120,6 +131,8 @@ export const SearchHeader = () => {
     const bottomHeight = useBottomTabBarHeight();
     const iconColor = useThemeColor({dark: 'white', light: 'black'}, 'icon');
     const textColor = useThemeColor({dark: 'white', light: 'black'}, 'text');
+    const [isPressed, setIsPressed] = useState(false);
+    const isDark = useColorScheme();
 
     const {handleSearch} = useSearchContext();
     const [searchText, setSearchText] = useState('');
@@ -132,6 +145,16 @@ export const SearchHeader = () => {
     const [duration, setDuration] = useState<RequestProps['duration']>([]);
     const [rating, setRating] = useState<RequestProps['rating']>([]);
 
+    const getCleanedFilters = () => {
+        const selectedFilters: RequestProps = {
+            kind,
+            status,
+            duration,
+            rating
+        };
+        return cleanObject(selectedFilters);
+    };
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchText(searchText);
@@ -142,23 +165,22 @@ export const SearchHeader = () => {
 
     useEffect(() => {
         if (debouncedSearchText) {
-
-            handleSearch(debouncedSearchText);
+            const cleanedFilters = getCleanedFilters();
+            handleSearch(debouncedSearchText, cleanedFilters);
         }
     }, [debouncedSearchText, handleSearch])
 
-
     const handleApply = () => {
-        const selectedFilters: RequestProps = {
-            kind,
-            status,
-            duration,
-            rating
-        };
+        const cleanedFilters = getCleanedFilters();
 
-        const cleanedFilters = cleanObject(selectedFilters);
-        handleSearch(debouncedSearchText, cleanedFilters);
+        if (debouncedSearchText.length === 0) {
+            setModalShow(false);
+        } else {
+            handleSearch(debouncedSearchText, cleanedFilters);
+            setModalShow(false);
+        }
     };
+
 
     const hasAnyFilter = (kind?.length ?? 0) > 0 || (status?.length ?? 0) > 0 || (duration?.length ?? 0) > 0 || (rating?.length ?? 0) > 0;
     return (
@@ -194,60 +216,103 @@ export const SearchHeader = () => {
             </BlurView>
 
             <Modal
-                animationType='fade'
-                transparent={true}
+                animationType={'slide'}
+                presentationStyle={'formSheet'}
+                transparent={false}
                 visible={modalShow}
                 onRequestClose={() => setModalShow(false)}
             >
-                <BlurView
-                    tint="systemChromeMaterial"
-                    intensity={100}
-                    style={[modalStyle.container, {
-                        bottom: bottomHeight + 20,
-                        width: HWSize.width - 20,
-                        height: HWSize.height - headerHeight.current - bottomHeight - 40
-                    }]}
-                >
+                <Pressable style={{flex: 1}} onPress={() => setModalShow(false)}/>
+                <ThemedView style={modalStyle.container}>
                     <View style={{flex: 1, justifyContent: 'flex-end', width: '100%'}}>
-                        <TouchableOpacity
-                            activeOpacity={0.8}
-                            onPress={() => setModalShow(false)}
-                            style={{alignSelf: 'flex-end'}}
-                        >
-                            <MaterialCommunityIcons name="close-circle-outline" size={30} color="white"/>
-                        </TouchableOpacity>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingBottom: 10
+                        }}>
+                            <ThemedText type='subtitle'>Фильтр</ThemedText>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => setModalShow(false)}
+                                hitSlop={10}
+                            >
+                                <MaterialCommunityIcons name="close-circle-outline" size={30} color={iconColor}/>
+                            </TouchableOpacity>
+                        </View>
                         <ScrollView contentContainerStyle={{paddingBottom: 20}}>
                             <FilterGroup
                                 title="Тип"
                                 options={kindOptions}
                                 selected={kind}
                                 onSelect={(v) => createToggleHandler(kind, setKind, v)}
+                                iconColor={iconColor}
                             />
                             <FilterGroup
                                 title="Статус"
                                 options={statusOptions}
                                 selected={status}
                                 onSelect={(v) => createToggleHandler(status, setStatus, v)}
+                                iconColor={iconColor}
                             />
                             <FilterGroup
                                 title="Длительность"
                                 options={durationOptions}
                                 selected={duration}
                                 onSelect={(v) => createToggleHandler(duration, setDuration, v)}
+                                iconColor={iconColor}
                             />
                             <FilterGroup
                                 title="Рейтинг"
                                 options={ratingOptions}
                                 selected={rating}
                                 onSelect={(v) => createToggleHandler(rating, setRating, v)}
+                                iconColor={iconColor}
                             />
                         </ScrollView>
 
-                        <TouchableOpacity onPress={handleApply} style={modalStyle.filterBtn}>
-                            <ThemedText type={'defaultSemiBold'}>Применить фильтры</ThemedText>
-                        </TouchableOpacity>
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                            paddingBottom: bottomHeight / 2
+                        }}>
+
+                            <Pressable
+                                onPress={handleApply}
+                                style={({pressed}) => [modalStyle.filterBtn,
+                                    {
+                                        flex: 1,
+                                        backgroundColor: isDark === 'dark' ? (pressed ? 'white' : 'transparent') : (pressed ? 'black' : 'transparent'),
+                                        borderWidth: 2,
+                                        borderColor: isDark === 'dark' ? 'white' : 'black'
+                                    },
+                                    modalStyle.filterBtn,
+                                ]}
+                                onPressIn={() => setIsPressed(true)}
+                                onPressOut={() => setIsPressed(false)}
+                            >
+                                <Text
+                                    style={{color: isPressed ? (isDark == 'dark' ? 'black' : 'white') : (isDark === 'dark' ? 'white' : 'black')}}
+
+                                >Применить</Text>
+                            </Pressable>
+
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setKind([]);
+                                    setStatus([]);
+                                    setRating([]);
+                                    setRating([]);
+                                }}
+                                style={[modalStyle.filterBtn, {flex: 1, backgroundColor: '#F44336'}]}
+                                activeOpacity={0.8}
+                            >
+                                <ThemedText type={'defaultSemiBold'}>Сбросить</ThemedText>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </BlurView>
+                </ThemedView>
             </Modal>
         </>
     )
@@ -283,17 +348,14 @@ const headerStyles = StyleSheet.create({
 const modalStyle = StyleSheet.create({
     container: {
         position: 'absolute',
-        // height: 760,
         padding: 20,
-        borderRadius: 16,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
-        marginHorizontal: 10,
+        height: '100%',
         flex: 1,
     },
     filterBtn: {
-        backgroundColor: '#2196F3',
         padding: 12,
         borderRadius: 10,
         alignItems: 'center'

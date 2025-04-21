@@ -13,6 +13,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { AntDesign } from "@expo/vector-icons";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSearchContext, } from "@/context/SearchContext";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function SearchScreen() {
     const headerHeight = useHeaderHeight();
@@ -20,10 +21,12 @@ export default function SearchScreen() {
 
     const {searchResults, isLoad} = useSearchContext();
 
+    const theme = useColorScheme();
+
     if (isLoad) {
         return (
             <ThemedView style={{flex: 1, padding: 10, justifyContent: 'center', alignItems: 'center'}}>
-                <ActivityIndicator size="large" color="black"/>
+                <ActivityIndicator size="large" color={theme === 'dark' ? 'white' : 'black'}/>
             </ThemedView>
         );
     }
