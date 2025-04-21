@@ -1,12 +1,13 @@
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEvent } from "expo";
-import { Pressable, StyleSheet, View } from "react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KodikAPI } from "@/api/kodik";
 import { SelectPicker } from "@/components/SelectPicker";
 import { ThemedText } from "@/components/ThemedText";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { Client } from "kodikwrapper";
+import { storage } from "@/utils/storage";
 
 type Voicer = {
     id: number;
@@ -20,73 +21,72 @@ type PlayerProps = {
 
 export const Player = ({malId}: PlayerProps) => {
     const tokenRef = useRef<string | null>(null);
+    const useNativeControls = useRef(false);
+
     const [selectedCaster, setSelectedCaster] = useState<Voicer | null>(null);
     const [voicers, setVoicers] = useState<Voicer[]>([]);
     const [episodes, setEpisodes] = useState<Record<string, string>>({});
     const [selectedEpisode, setSelectedEpisode] = useState<string | null>(null);
-    const [videoUrl, serVideoUrl] = useState<string | null>(null);
-    const useNativeControls = useRef(false)
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
+    const player = useVideoPlayer(videoUrl, player => {
+        player.loop = true;
+    });
+    const { isPlaying } = useEvent(player, 'playingChange', {
+        isPlaying: player.playing
+    });
+
+    const fetchData = async () => {
+        try {
+            tokenRef.current = tokenRef.current || (await KodikAPI.getToken()) || "";
+            const client = Client.fromToken(tokenRef.current);
+            const voiceData = await client.search({
+                shikimori_id: malId,
+                episode: 1,
+            })
+            const translations = voiceData.results
+                .map(item => item.translation)
+                .filter(Boolean);
+
+            setVoicers(translations);
+
+            const savedVoicerId = storage.getEpisodeCaster(`${malId}`);
+            const savedTranslations = translations.find(v => v.id.toString() === savedVoicerId);
+            setSelectedCaster(savedTranslations || translations[0] || null);
+        } catch (error) {
+            console.error("Ошибка при получении озвучек:", error);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                if (!tokenRef.current) {
-                    tokenRef.current = await KodikAPI.getToken();
-                }
-
-                const client = Client.fromToken(tokenRef.current || "");
-                const voiceData = await client.search({
-                    shikimori_id: malId,
-                    episode: 1,
-                })
-                const allTranslations = voiceData.results.map(item => item.translation).filter(Boolean);
-                console.log(allTranslations)
-
-                if (!allTranslations) return setVoicers([]);
-
-                setVoicers(allTranslations);
-                setSelectedCaster(allTranslations[0] || null);
-
-
-                // const voicersData = await KodikAPI.getVoicers({
-                //     token: tokenRef.current || "",
-                //     shikiTitleId: malId,
-                // });
-
-                // if (!voicersData) return setVoicers([]);
-                //
-                // setVoicers(voicersData);
-                // setSelectedCaster(voicersData[0] || null);
-
-            } catch (error) {
-                console.error("Ошибка при получении озвучек:", error);
-            }
-        };
         fetchData();
     }, []);
 
+
+    const fetchEpisodes = async (selectedCaster: Voicer) => {
+        try {
+            const {id, title} = selectedCaster;
+            const episodesData = await KodikAPI.getInfoById({
+                token: tokenRef.current || "",
+                voicerId: id,
+                voicerTitle: title,
+                shikiTitleId: malId,
+            });
+
+            const episodeList = episodesData?.[0]?.episodes ?? {};
+            setEpisodes(episodeList);
+
+            const storedEpisode = storage.getLastViewEpisode(`${malId}`);
+            const firstEpisode = Object.keys(episodeList)[0] ?? null;
+            setSelectedEpisode(storedEpisode && episodeList[storedEpisode] ? storedEpisode : firstEpisode);
+        } catch (error) {
+            console.error("Ошибка при получении серий:", error);
+        }
+    };
+
     useEffect(() => {
         if (!selectedCaster?.id || !tokenRef.current) return;
-
-        const fetchEpisodes = async () => {
-            try {
-                const {id, title} = selectedCaster;
-                const episodesData = await KodikAPI.getInfoById({
-                    token: tokenRef.current || "",
-                    voicerId: id,
-                    voicerTitle: title,
-                    shikiTitleId: malId,
-                });
-
-                if (episodesData?.[0]?.episodes) {
-                    setEpisodes(episodesData[0].episodes);
-                    setSelectedEpisode(Object.keys(episodesData[0].episodes)[0]);
-                }
-            } catch (error) {
-                console.error("Ошибка при получении серий:", error);
-            }
-        };
-        fetchEpisodes();
+        fetchEpisodes(selectedCaster);
     }, [selectedCaster?.id]);
 
     useEffect(() => {
@@ -94,14 +94,9 @@ export const Player = ({malId}: PlayerProps) => {
 
         const fetchVideoLink = async () => {
             try {
-                const links = await KodikAPI.getLinksWithActualEndpoint(
-                selectedEpisode,
-                episodes
-                );
-                const validLink = links?.[0]?.startsWith("https:")
-                ? links[0]
-                : `https:${links?.[0] || ""}`;
-                serVideoUrl(validLink);
+                const links = await KodikAPI.getLinksWithActualEndpoint(selectedEpisode, episodes);
+                const link = links?.[0];
+                setVideoUrl(link?.startsWith("https:") ? link : `https:${link}`);
             } catch (error) {
                 console.error("Ошибка при получении ссылки на серию:", error);
             }
@@ -109,24 +104,32 @@ export const Player = ({malId}: PlayerProps) => {
         fetchVideoLink();
     }, [selectedEpisode]);
 
+    const handleVoicersSelect = useCallback(
+        (id: string) => {
+            const selected = voicers.find((v) => v.id.toString() === id);
+            if (selected) {
+                setSelectedCaster(selected);
+                setSelectedEpisode(null);
+                storage.setEpisodeCaster(`${malId}`, selected.id.toString());
+            }
+        },
+        [voicers, malId]
+    );
 
-    const player = useVideoPlayer(videoUrl, player => {
-        player.loop = true;
-    });
-    const {isPlaying} = useEvent(player, 'playingChange', {isPlaying: player.playing});
-
-    const handleVoicersSelect = (casterId: string) => {
-        const selected = voicers.find((v) => v.id === Number(casterId));
-        setSelectedCaster(selected || null);
-        setSelectedEpisode(null);
-    }
+    const handleEpisodeChange = useCallback(
+        (key: string) => {
+            setSelectedEpisode(key);
+            storage.setLastViewEpisode(`${malId}`, key);
+        },
+        [malId]
+    );
 
     const episodeOptions = useMemo(
-    () => Object.keys(episodes).map((key) => ({
-        label: `Серия ${key}`,
-        value: key
-    })),
-    [episodes]
+        () => Object.keys(episodes).map((key) => ({
+            label: `Серия ${key}`,
+            value: key
+        })),
+        [episodes]
     );
 
     return (
@@ -135,7 +138,7 @@ export const Player = ({malId}: PlayerProps) => {
             <SelectPicker
             title="Серия"
             options={episodeOptions}
-            onSelect={(episodeKey) => setSelectedEpisode(episodeKey)}
+            onSelect={handleEpisodeChange}
             >
                 <View style={styles.selectItemContainer}>
                     <ThemedText>Серия</ThemedText>
@@ -149,7 +152,7 @@ export const Player = ({malId}: PlayerProps) => {
                 label: v.title,
                 value: v.id.toString()
             }))}
-            onSelect={(casterId) => handleVoicersSelect(casterId)}
+            onSelect={handleVoicersSelect}
             >
                 <View style={styles.selectItemContainer}>
                     <ThemedText>Озвучка</ThemedText>
@@ -158,23 +161,31 @@ export const Player = ({malId}: PlayerProps) => {
             </SelectPicker>
         </View>
         <View>
-            <Pressable style={[styles.playBtn, {opacity: isPlaying ? 0 : 1}]}
-                       onPress={() => {
-                           useNativeControls.current = true;
-                           player.playing ? player.pause() : player.play();
-                       }}>
-                <FontAwesome6 name="play" size={52} color="white"/>
-            </Pressable>
-            <View style={styles.playerPlaceholder}/>
+            {videoUrl ? (
+                <>
+                    <Pressable style={[styles.playBtn, {opacity: isPlaying ? 0 : 1}]}
+                               onPress={() => {
+                                   useNativeControls.current = true;
+                                   player.playing ? player.pause() : player.play();
+                               }}>
+                        <FontAwesome6 name="play" size={52} color="white"/>
+                    </Pressable>
+                    <View style={styles.playerPlaceholder}/>
 
-            <VideoView
-            style={styles.video}
-            player={player}
-            allowsFullscreen={true}
-            allowsPictureInPicture={true}
-            startsPictureInPictureAutomatically={true}
-            nativeControls={useNativeControls.current}
-            />
+                    <VideoView
+                        style={styles.video}
+                        player={player}
+                        allowsFullscreen={true}
+                        allowsPictureInPicture={true}
+                        startsPictureInPictureAutomatically={true}
+                        nativeControls={useNativeControls.current}
+                    />
+                </>
+            ) : (
+                <View style={[styles.playerPlaceholder, { justifyContent: "center" }]}>
+                    <ActivityIndicator size="large" color="#fff" />
+                </View>
+            )}
 
         </View>
     </View>
