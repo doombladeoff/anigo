@@ -2,13 +2,15 @@ import { ThemedView } from "@/components/ThemedView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimeList } from "@/components/AnimeList";
 import { HelloWave } from "@/components/HelloWave";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { useAnimeList } from "@/hooks/useAnimeList";
 import { onScreenProps, topProps } from "@/constants/QLRequestProps";
 
 import { Recommendations } from "@/components/Recommendations";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { FontAwesome, Fontisto } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const listStyles = {
   containerStyle: { paddingHorizontal: 10, gap: 10 },
@@ -24,12 +26,15 @@ export default function HomeScreen() {
   return (
     <ThemedView style={{ flex: 1, paddingTop: insets.top, gap: 20 }}>
       <View style={styles.headerContainer}>
-        <ThemedText type="title">AniGO</ThemedText>
-        <HelloWave />
+        <View style={styles.headerLogoContainer}>
+          <ThemedText type="title">AniGO</ThemedText>
+          <HelloWave />
+        </View>
+        <TouchableOpacity activeOpacity={0.8} hitSlop={10} onPress={() => {router.push({pathname:'/(screens)/favorites'})}}>
+          <FontAwesome name={'bookmark'} size={32} color="orange" style={{ paddingHorizontal: 15}}/>
+        </TouchableOpacity>
       </View>
-      <ScrollView
-        contentContainerStyle={{ gap: 10, paddingBottom: bottomTabHeight + 20 }}
-      >
+      <ScrollView contentContainerStyle={{ gap: 10, paddingBottom: bottomTabHeight + 20 }}>
         <Recommendations />
         <AnimeList
           headerText="Top Rated"
@@ -60,7 +65,13 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent:'space-between',
     gap: 10,
     paddingHorizontal: 10,
+  },
+  headerLogoContainer: {
+    alignItems:'center',
+    flexDirection:'row',
+    gap: 10,
   },
 });
