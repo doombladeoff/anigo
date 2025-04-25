@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { InputController } from "@/components/InputController";
 import { storage } from "@/utils/storage";
 import * as Haptics from "expo-haptics";
-import { useGoogleAuth } from "@/lib/googleAuth";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 export default function AuthScreen() {
     const insets = useSafeAreaInsets();
@@ -76,7 +76,7 @@ export default function AuthScreen() {
                                 activeOpacity={0.8}
                                 style={styles.skipButtonContainer}
                             >
-                                <ThemedText type="defaultSemiBold" style={styles.skipButtonText}>Skip</ThemedText>
+                                <ThemedText type="defaultSemiBold" style={styles.skipButtonText} lightColor={'white'}>Skip</ThemedText>
                             </TouchableOpacity>
 
                             <View style={styles.formContainer}>
@@ -131,7 +131,7 @@ export default function AuthScreen() {
                                     ))}
                                 </View>
                                 <View style={[styles.registerFooter, {marginBottom: useSafeAreaInsets().bottom * 2}]}>
-                                    <ThemedText type='default' style={{fontSize: 16}}>Do not have account?</ThemedText>
+                                    <ThemedText type='default' style={{fontSize: 16}} lightColor={'white'}>Don't have an account?</ThemedText>
                                     <TouchableOpacity
                                         hitSlop={15}
                                         activeOpacity={1}
@@ -151,7 +151,8 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
+        backgroundColor: 'black'
     },
     flex: {
         flex: 1

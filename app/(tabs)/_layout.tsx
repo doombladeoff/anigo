@@ -85,18 +85,29 @@ export default function TabLayout() {
                                                 borderRadius: 25,
                                                 borderColor: focused ? '#e7b932' : 'transparent',
                                             }}>
-                                                {user && user.photoURL ? (
+                                                {user?.avatarURL ? (
                                                     <Image
-                                                        source={user && {uri: user.photoURL}}
+                                                        source={user && {uri: user.avatarURL}}
                                                         style={{
-                                                            width: size,
-                                                            height: size,
+                                                            width: focused ? size : size + 5,
+                                                            height: focused ? size : size + 5,
                                                             margin: 2,
                                                             borderRadius: 25
                                                         }}
                                                     />
-                                                ) :(
-                                                    <IconSymbol size={20} name={'person.fill'} color={color} style={{margin: 4}}/>
+                                                ) : user?.photoURL ? (
+                                                    <Image
+                                                        source={user && {uri: user?.photoURL}}
+                                                        style={{
+                                                            width: focused ? size : size + 5,
+                                                            height: focused ? size : size + 5,
+                                                            margin: 2,
+                                                            borderRadius: 25
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <IconSymbol size={focused ? 20 : 28} name={'person.fill'} color={color}
+                                                                style={{margin: 4}}/>
                                                 )}
                                             </View>
                                         ) : (

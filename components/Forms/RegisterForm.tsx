@@ -4,7 +4,7 @@ import { Loader } from "@/components/ui/Loader";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { useGoogleAuth } from "@/lib/googleAuth";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 interface RegisterFormProps {
     defaultEmail?: string;

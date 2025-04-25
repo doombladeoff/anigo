@@ -3,7 +3,7 @@ import { InputController } from "@/components/InputController";
 import { Loader } from "@/components/ui/Loader";
 import { ThemedText } from "@/components/ThemedText";
 import { useState } from "react";
-import { useGoogleAuth } from "@/lib/googleAuth";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { useForm } from "react-hook-form";
 
 
