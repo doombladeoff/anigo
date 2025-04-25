@@ -4,7 +4,7 @@ import { OrderEnum } from "@/constants/OrderEnum";
 export const QLRequestDefaultProps: RequestProps = {
   kind: ["tv"],
   duration: ["D", "F"],
-  rating: ["pg_13", "r"],
+  rating: ["pg_13", "r", "r_plus"],
   order: OrderEnum.ranked,
 };
 
