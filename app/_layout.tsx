@@ -1,44 +1,27 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import 'react-native-reanimated';
-
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ApolloProvider } from "@apollo/client";
 import client from "@/api/shikimori/client";
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
-    const [loaded] = useFonts({
-        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    });
-
-    useEffect(() => {
-        if (loaded) {
-            SplashScreen.hideAsync();
-        }
-    }, [loaded]);
-
-    if (!loaded) {
-        return null;
-    }
-
     return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <ApolloProvider client={client}>
-            <Stack>
-                <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
-                <Stack.Screen name="(screens)" options={{headerShown: false}}/>
-                <Stack.Screen name="+not-found"/>
-            </Stack>
-            <StatusBar style="auto"/>
-        </ApolloProvider>
-    </ThemeProvider>
+        <AuthProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <ApolloProvider client={client}>
+                    <Stack screenOptions={{headerShown: false}}>
+                        <Stack.Screen name="(auth)" options={{animation: 'fade_from_bottom'}}/>
+                        <Stack.Screen name="(tabs)" options={{animation: 'fade'}}/>
+                        <Stack.Screen name="(screens)"/>
+                        <Stack.Screen name="+not-found"/>
+                    </Stack>
+                    <StatusBar style="auto"/>
+                </ApolloProvider>
+            </ThemeProvider>
+        </AuthProvider>
     );
 }

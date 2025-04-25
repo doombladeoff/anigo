@@ -5,6 +5,7 @@ const mmkv = new MMKV();
 const EPISODE_KEY_PREFIX = "last-episode-";
 const CASTER_KEY_PREFIX = "last-caster-";
 const FAVORITE_KEY_PREFIX = "favorite";
+const SKIP_KEY = "skip";
 
 export interface FavoriteItem {
     id: string | number;
@@ -12,7 +13,14 @@ export interface FavoriteItem {
     poster: string;
 }
 
-export const storage  = {
+export const storage = {
+    // AUTH
+    setToken: (key: string, token: string) => mmkv.set(key, token),
+    getToken: (key: string) => mmkv.getString(key),
+    deleteToken: (key: string) => mmkv.delete(key),
+    setSkip: (value: boolean) => mmkv.set(SKIP_KEY, value),
+    getSkip: () => mmkv.getBoolean(SKIP_KEY),
+
     //Episodes
     setLastViewEpisode: (key: string, value: string) => mmkv.set(`${EPISODE_KEY_PREFIX}$${key}`, value),
     getLastViewEpisode: (key: string) => mmkv.getString(`${EPISODE_KEY_PREFIX}$${key}`),

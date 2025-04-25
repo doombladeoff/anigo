@@ -10,13 +10,15 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.f0rever.anigo"
+      "bundleIdentifier": "com.f0rever.anigo",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.f0rever.anigo"
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +35,23 @@
       ],
       "expo-router",
       [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -40,7 +59,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-build-properties",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
