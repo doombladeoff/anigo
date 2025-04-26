@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Открываем AnigoApp...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="icon"
+      href="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg"
+      type="image/svg+xml"
+    />
+
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        font-family: "Arial", sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        text-align: center;
+      }
+
+      img {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 16px;
+        color: #666;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <img
+      src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg"
+      alt="App Logo"
+    />
+    <h1>Открываем приложение...</h1>
+    <p>Если ничего не происходит, <a id="link" href="#">нажмите сюда</a>.</p>
+
+    <script>
+      const pathParts = window.location.pathname.split("/").filter(Boolean);
+      const fallbackLink = document.getElementById("link");
+
+      if (pathParts.length === 2 && pathParts[0] === "id") {
+        const id = pathParts[1];
+        const appUrl = `anigoapp://${id}`;
+
+        fallbackLink.href = appUrl;
+        setTimeout(() => {
+          window.location.href = appUrl;
+        }, 1000);
+      } else {
+        document.querySelector("h1").textContent = "Неверный формат ссылки";
+        fallbackLink.style.display = "none";
+      }
+    </script>
+  </body>
+</html>
