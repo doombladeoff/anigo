@@ -56,7 +56,6 @@ export default function AnimeScreen() {
     useEffect(() => {
         if (anime?.name) {
             navigation.setOptions({title: anime.name});
-            console.log(anime.poster.originalUrl)
         }
     }, [anime]);
 
@@ -86,11 +85,13 @@ export default function AnimeScreen() {
 
     return (
         <>
-            <Stack.Screen options={{
-                headerRight: () => {
-                    return <ShareButton text={anime?.russian} id={anime?.malId} iconColor={iconColor}/>
-                }
-            }}/>
+            <Stack.Screen
+                options={{
+                    headerRight: () => {
+                        return <ShareButton text={anime?.russian} id={anime?.malId} iconColor={iconColor}/>
+                    }
+                }}
+            />
             <ThemedView style={{flex: 1}}>
                 <ScrollView
                     ref={scrollRef}
