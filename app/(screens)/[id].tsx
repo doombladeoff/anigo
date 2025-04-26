@@ -1,132 +1,205 @@
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, LayoutChangeEvent, ScrollView, TouchableOpacity, View } from "react-native";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { Stack, useLocalSearchParams, useNavigation } from "expo-router";
+import { useTheme } from "@react-navigation/core";
+import { FontAwesome } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
+
+import { getAnimeList } from "@/api/shikimori/getAnimes";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import { useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, ScrollView } from "react-native";
-import { useEffect, useState } from "react";
+import { GenresList } from "@/components/AnimeScreen/Genres";
+import { ScreenshotsList } from "@/components/AnimeScreen/Screenshots";
+import { Player } from "@/components/Player";
+import { Description } from "@/components/AnimeScreen/Description";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { storage } from "@/utils/storage";
+
 import { ShikimoriAnime } from "@/interfaces/Shikimori.interfaces";
 import { RequestProps } from "@/interfaces/ShikimoriRequest.interfaces";
-import { getAnimeList } from "@/api/shikimori/getAnimes";
-import { useHeaderHeight } from "@react-navigation/elements";
-import { useNavigation } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import { GenresList } from "@/components/Genres";
-import { ScreenshotsList } from "@/components/Screenshots";
-import { Collapsible } from "@/components/Collapsible";
-import { useTheme } from "@react-navigation/core";
-import { Image } from "expo-image";
-import { Player } from "@/components/Player";
+import { ShareButton } from "@/components/ui/ShareButton";
 
-
-const cleanedText = (text: string): string => {
-    return text
-    .replace(/\[character=[^\]]*]([\s\S]*?)\[\/character]/g, '$1')
-    .replace(/\[i]([\s\S]*?)\[\/i]/g, '$1')
-    .trim();
+const GRADIENT_COLORS = {
+    dark: ["transparent", "rgba(21,23,24,0.85)", "rgba(21,23,24,0.95)", "rgba(21,23,24,1)"],
+    light: ["transparent", "rgba(255,255,255,0)", "rgba(255,255,255,0.7)", "rgba(255,255,255,1)"]
 };
+
 export default function AnimeScreen() {
-    const {id: malId} = useLocalSearchParams();
-    const nav = useNavigation();
+    const {id: malId, isFavorite} = useLocalSearchParams();
+    const navigation = useNavigation();
 
-    const isDark = useTheme().dark;
+    const {dark: isDark} = useTheme();
+    const iconColor = useThemeColor({light: "black", dark: "white"}, "icon");
 
-    const [data, setData] = useState<ShikimoriAnime>();
-    const [isLoading, setLoading] = useState<boolean>(true);
+    const [anime, setAnime] = useState<ShikimoriAnime | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [isFav, setIsFav] = useState(isFavorite === 'true');
 
+    const scrollRef = useRef<ScrollView>(null);
+    const targetY = useRef(0);
     const headerHeight = useHeaderHeight();
 
     useEffect(() => {
-        const fetchData = async () => {
-            const props: RequestProps = {
-                ids: malId.toString()
-            };
-
-            const result = await getAnimeList(props);
-            setData(result[0]);
-        }
-        fetchData().then(() => setLoading(false));
+        (async () => {
+            const props: RequestProps = {ids: malId.toString()};
+            const [animeData] = await getAnimeList(props);
+            setAnime(animeData);
+            if (!isFavorite) {
+                setIsFav(storage.checkIsFavorite(malId.toString()));
+            }
+            setLoading(false);
+        })();
     }, [malId]);
 
     useEffect(() => {
-        nav.setOptions({title: data?.name ?? 'Anime'});
-    }, [data]);
+        if (anime?.name) {
+            navigation.setOptions({title: anime.name});
+            console.log(anime.poster.originalUrl)
+        }
+    }, [anime]);
 
-    if (isLoading) {
+    const handleBookmarkToggle = async () => {
+        const id = malId.toString();
+
+        if (isFav) {
+            storage.removeFavorite(id);
+            setIsFav(false);
+        } else {
+            storage.addFavorite({id, poster: anime?.poster.originalUrl || "", title: anime?.russian || ""});
+            setIsFav(true);
+        }
+    };
+
+    const handleWatchPress = () => {
+        scrollRef.current?.scrollTo({y: targetY.current, animated: true});
+    };
+
+    if (loading || !anime) {
         return (
-        <ThemedView style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-            <ActivityIndicator size="large" color="white"/>
-        </ThemedView>
-        )
+            <ThemedView style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
+                <ActivityIndicator size="large" color={iconColor}/>
+            </ThemedView>
+        );
     }
 
     return (
-    <>
-        <ThemedView style={{flex: 1}}>
-            <ScrollView contentContainerStyle={{
-                paddingTop: headerHeight,
-                paddingBottom: headerHeight / 2
-            }}>
-                <Image
-                source={{uri: data?.poster.mainUrl}}
-                style={{
-                    width: '100%',
-                    height: 520,
-                    position: 'absolute',
-                }}
-                blurRadius={3}
-                priority={'normal'}
-                cachePolicy={'disk'}
+        <>
+            <Stack.Screen options={{
+                headerRight: () => {
+                    return <ShareButton text={anime?.russian} id={anime?.malId} iconColor={iconColor}/>
+                }
+            }}/>
+            <ThemedView style={{flex: 1}}>
+                <ScrollView
+                    ref={scrollRef}
+                    contentContainerStyle={{paddingTop: headerHeight, paddingBottom: headerHeight / 2}}
+                >
+                    <Image
+                        source={{uri: anime.poster.mainUrl}}
+                        style={{width: "100%", height: 520, position: "absolute"}}
+                        blurRadius={3}
+                        cachePolicy="disk"
+                        priority="normal"
+                    />
 
-                />
-                <LinearGradient
-                colors={
-                    isDark ? ['transparent', 'rgba(21,23,24,0.85)', 'rgba(21,23,24,0.95)', 'rgba(21,23,24,1)'] : ['transparent', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,1)']}
-                style={{position: 'absolute', width: '100%', height: 520}}
-                />
+                    <LinearGradient
+                        colors={GRADIENT_COLORS[isDark ? "dark" : "light"] as [string, string, ...string[]]}
+                        style={{position: "absolute", width: "100%", height: 520}}
+                    />
 
-                <Image
-                source={{uri: data?.poster.originalUrl}}
-                style={{
-                    width: 200,
-                    height: 300,
-                    alignSelf: 'center',
-                    borderRadius: 12,
-                    shadowRadius: 10,
-                    shadowOpacity: 0.3,
-                    shadowColor: 'black',
-                    shadowOffset: {width: 4, height: 4},
-                    marginTop: 50
-                }}
-                cachePolicy={'disk'}
-                priority={'high'}
-                />
+                    <View
+                        style={{
+                            alignSelf: "center",
+                            borderRadius: 12,
+                            marginTop: 20,
+                            shadowColor: isDark ? 'white' : 'black',
+                            shadowOffset: {width: 0, height: 4},
+                            shadowOpacity: isDark ? 0.35 : 0.55,
+                            shadowRadius: 15,
+                        }}
+                    >
+                        <Image
+                            source={{uri: anime.poster.originalUrl}}
+                            style={{width: 200, height: 300, alignSelf: "center", borderRadius: 12, marginTop: 20}}
+                            cachePolicy="disk"
+                            priority="high"
+                        />
+                    </View>
 
-                <ThemedText type="title" style={{fontSize: 18, alignSelf: 'center', marginTop: 10}}
-                            numberOfLines={2}>{data?.japanese}</ThemedText>
-
-                <GenresList
-                genres={data?.genres ?? []}
-                containerStyle={{gap: 10, paddingHorizontal: 10, paddingBottom: 10}}
-                genreStyle={{backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: 5, borderRadius: 12}}
-                genreTextStyle={{padding: 5}}
-                headerTextStyle={{paddingHorizontal: 10}}
-                />
-
-                <Collapsible title={'Description'}>
                     <ThemedText
-                    type="default"
-                    style={{fontSize: 14}}>{cleanedText(data?.description ?? '')}</ThemedText>
-                </Collapsible>
+                        type="title"
+                        style={{fontSize: 18, alignSelf: "center", marginTop: 15}}
+                        numberOfLines={2}
+                    >
+                        {anime.japanese}
+                    </ThemedText>
 
-                <ScreenshotsList
-                images={data?.screenshots ?? []}
-                horizontal
-                imageStyle={{width: 280, height: 180, borderRadius: 12}}
-                containerStyle={{paddingHorizontal: 10, gap: 10, paddingTop: 10}}
-                />
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 20,
+                            width: "100%",
+                            paddingHorizontal: 45,
+                            paddingVertical: 15
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: isDark ? "white" : "black",
+                                padding: 12,
+                                paddingHorizontal: 22,
+                                borderRadius: 22,
+                                flex: 1,
+                                alignItems: "center"
+                            }}
+                            onPress={handleWatchPress}
+                        >
+                            <ThemedText
+                                darkColor="black"
+                                lightColor="white"
+                                style={{fontSize: 16, fontWeight: "bold"}}
+                            >
+                                Смотреть
+                            </ThemedText>
+                        </TouchableOpacity>
 
-                <Player malId={Number(data?.malId)}/>
-            </ScrollView>
-        </ThemedView>
-    </>
-    )
+                        <TouchableOpacity onPress={handleBookmarkToggle}>
+                            <FontAwesome
+                                name={(isFavorite === "true" || isFav) ? "bookmark" : "bookmark-o"}
+                                size={32}
+                                color="#e7b932"
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    <GenresList
+                        genres={anime.genres || []}
+                        containerStyle={{gap: 10, paddingHorizontal: 10, paddingBottom: 10}}
+                        genreStyle={{backgroundColor: "rgba(255, 255, 255, 0.1)", padding: 5, borderRadius: 12}}
+                        genreTextStyle={{padding: 5}}
+                        headerTextStyle={{paddingHorizontal: 10}}
+                        headerShow={false}
+                    />
+
+                    {anime.description && <Description text={anime.description}/>}
+
+                    <ScreenshotsList
+                        images={anime.screenshots || []}
+                        horizontal
+                        imageStyle={{width: 280, height: 180, borderRadius: 12}}
+                        containerStyle={{paddingHorizontal: 10, gap: 10, paddingTop: 10}}
+                    />
+
+                    <Player
+                        malId={Number(anime.malId)}
+                        onLayout={(e: LayoutChangeEvent) => (targetY.current = e.nativeEvent.layout.y)}
+                    />
+                </ScrollView>
+            </ThemedView>
+        </>
+    );
 }
