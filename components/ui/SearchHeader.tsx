@@ -3,7 +3,7 @@ import {
     Modal,
     Pressable,
     ScrollView,
-    StyleSheet, Text,
+    StyleSheet,
     TextInput,
     TouchableOpacity,
     View
@@ -222,7 +222,6 @@ export const SearchHeader = () => {
                 visible={modalShow}
                 onRequestClose={() => setModalShow(false)}
             >
-                <Pressable style={{flex: 1}} onPress={() => setModalShow(false)}/>
                 <ThemedView style={modalStyle.container}>
                     <View style={{flex: 1, justifyContent: 'flex-end', width: '100%'}}>
                         <View style={{
@@ -292,10 +291,15 @@ export const SearchHeader = () => {
                                 onPressIn={() => setIsPressed(true)}
                                 onPressOut={() => setIsPressed(false)}
                             >
-                                <Text
-                                    style={{color: isPressed ? (isDark == 'dark' ? 'black' : 'white') : (isDark === 'dark' ? 'white' : 'black')}}
-
-                                >Применить</Text>
+                                <ThemedText
+                                    style={{
+                                        color:
+                                            isPressed ?
+                                                (isDark == 'dark' ? 'black' : 'white') :
+                                                (isDark === 'dark' ? 'white' : 'black')
+                                    }}>
+                                    Применить
+                                </ThemedText>
                             </Pressable>
 
                             <TouchableOpacity
@@ -308,7 +312,7 @@ export const SearchHeader = () => {
                                 style={[modalStyle.filterBtn, {flex: 1, backgroundColor: '#F44336'}]}
                                 activeOpacity={0.8}
                             >
-                                <ThemedText type={'defaultSemiBold'}>Сбросить</ThemedText>
+                                <ThemedText type={'defaultSemiBold'} lightColor={'white'}>Сбросить</ThemedText>
                             </TouchableOpacity>
                         </View>
                     </View>

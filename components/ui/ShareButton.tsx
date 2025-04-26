@@ -21,8 +21,8 @@ const onShare = async ({text, id}: ShareButtonProps) => {
 
 export const ShareButton = ({text, id, iconColor = 'white'}: ShareButtonProps) => {
     return (
-        <TouchableOpacity hitSlop={30} onPress={() => onShare({text, id})}>
-            <FontAwesome6 name="share" size={23} color={iconColor}/>
+        <TouchableOpacity hitSlop={12} onPress={() => onShare({text, id})} style={{paddingBottom: 10}}>
+            <FontAwesome6 name="share" size={28} color={iconColor}/>
         </TouchableOpacity>
     )
 }

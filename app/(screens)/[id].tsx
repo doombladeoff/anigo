@@ -20,6 +20,8 @@ import { storage } from "@/utils/storage";
 import { ShikimoriAnime } from "@/interfaces/Shikimori.interfaces";
 import { RequestProps } from "@/interfaces/ShikimoriRequest.interfaces";
 import { ShareButton } from "@/components/ui/ShareButton";
+import { Loader } from "@/components/ui/Loader";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 const GRADIENT_COLORS = {
     dark: ["transparent", "rgba(21,23,24,0.85)", "rgba(21,23,24,0.95)", "rgba(21,23,24,1)"],
@@ -41,6 +43,11 @@ export default function AnimeScreen() {
     const targetY = useRef(0);
     const headerHeight = useHeaderHeight();
 
+    const scale = useSharedValue(1);
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{scale: scale.value}],
+    }));
+
     useEffect(() => {
         (async () => {
             const props: RequestProps = {ids: malId.toString()};
@@ -60,6 +67,9 @@ export default function AnimeScreen() {
     }, [anime]);
 
     const handleBookmarkToggle = async () => {
+        scale.value = withSpring(1.2, {stiffness: 200}, () => {
+            scale.value = withSpring(1);
+        });
         const id = malId.toString();
 
         if (isFav) {
@@ -78,7 +88,7 @@ export default function AnimeScreen() {
     if (loading || !anime) {
         return (
             <ThemedView style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
-                <ActivityIndicator size="large" color={iconColor}/>
+                <Loader size={46}/>
             </ThemedView>
         );
     }
@@ -168,12 +178,14 @@ export default function AnimeScreen() {
                             </ThemedText>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={handleBookmarkToggle}>
-                            <FontAwesome
-                                name={(isFavorite === "true" || isFav) ? "bookmark" : "bookmark-o"}
-                                size={32}
-                                color="#e7b932"
-                            />
+                        <TouchableOpacity onPress={handleBookmarkToggle} hitSlop={12}>
+                            <Animated.View style={animatedStyle}>
+                                <FontAwesome
+                                    name={isFav ? "bookmark" : "bookmark-o"}
+                                    size={32}
+                                    color="#e7b932"
+                                />
+                            </Animated.View>
                         </TouchableOpacity>
                     </View>
 

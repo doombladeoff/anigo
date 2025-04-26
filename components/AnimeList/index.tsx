@@ -18,6 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 
 import { RequestProps } from "@/interfaces/ShikimoriRequest.interfaces";
 import { ShikimoriAnime } from "@/interfaces/Shikimori.interfaces";
+import Skeleton from "@/components/ui/Skeleton";
 
 interface AnimeListProps extends Partial<FlatListProps<ShikimoriAnime>> {
   headerText?: string;
@@ -82,19 +83,17 @@ export const AnimeList = ({
 
   if (isLoading) {
     return (
-      <View style={{ flexDirection: "row", gap: GAP }}>
-        {Array.from({ length: 4 }).map((_, index) => (
-          <View
-            key={index}
-            style={{
-              width: size.width,
-              height: size.height,
-              borderRadius: 12,
-              backgroundColor: "gray",
-            }}
-          />
-        ))}
-      </View>
+        <View style={{paddingHorizontal: 10, paddingBottom: 10}}>
+          <View style={{ flexDirection:'row', justifyContent: 'space-between'}}>
+            <Skeleton width={150} height={20} style={{ backgroundColor: 'gray', borderRadius: 4, marginBottom: 10 }} />
+            <Skeleton width={25} height={20} style={{ backgroundColor: 'gray', borderRadius: 4, marginBottom: 10 }} />
+          </View>
+          <View style={{ flexDirection: "row", gap: GAP}}>
+            {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} width={size.width} height={size.height} style={{backgroundColor: 'gray'}}/>
+            ))}
+          </View>
+        </View>
     );
   }
 

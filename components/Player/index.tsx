@@ -1,6 +1,6 @@
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEvent } from "expo";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View, ViewProps } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KodikAPI } from "@/api/kodik";
 import { SelectPicker } from "@/components/SelectPicker";
@@ -17,9 +17,9 @@ type Voicer = {
 
 type PlayerProps = {
     malId: number;
-};
+} & ViewProps;
 
-export const Player = ({malId}: PlayerProps) => {
+export const Player = ({malId, onLayout}: PlayerProps) => {
     const tokenRef = useRef<string | null>(null);
     const useNativeControls = useRef(false);
 
@@ -133,7 +133,7 @@ export const Player = ({malId}: PlayerProps) => {
     );
 
     return (
-    <View style={{marginTop: 10}}>
+    <View style={{marginTop: 10}} onLayout={onLayout}>
         <View style={{flexDirection: 'row'}}>
             <SelectPicker
             title="Серия"
@@ -182,7 +182,13 @@ export const Player = ({malId}: PlayerProps) => {
                     />
                 </>
             ) : (
-                <View style={[styles.playerPlaceholder, { justifyContent: "center" }]}>
+                <View style={{
+                    backgroundColor:'black',
+                    height: 275,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: 1,
+                }}>
                     <ActivityIndicator size="large" color="#fff" />
                 </View>
             )}

@@ -22,9 +22,8 @@ export default function ScreensLayout() {
                 headerTitle: '',
                 headerLeft: () => {
                     return (
-                        <TouchableOpacity onPress={() => goBackSafe()} activeOpacity={0.8} hitSlop={30}
-                                          style={{paddingLeft: 10}}>
-                            <FontAwesome6 name="arrow-left" size={26} color={iconColor}/>
+                        <TouchableOpacity onPress={() => goBackSafe()} activeOpacity={0.8} hitSlop={30}>
+                            <FontAwesome6 name="arrow-left" size={28} color={iconColor}/>
                         </TouchableOpacity>
                     );
                 }
