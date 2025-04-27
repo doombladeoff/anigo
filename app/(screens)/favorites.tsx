@@ -7,6 +7,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { FavoriteItem, storage } from "@/utils/storage";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Entypo, FontAwesome6 } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get('window').width;
 const numColumns = 3;
@@ -16,6 +17,7 @@ const cardHeight = cardWidth * 1.5;
 
 export default function FavoritesScreen() {
     const headerHeight = useHeaderHeight();
+    const insets = useSafeAreaInsets();
     const [data, setData] = useState<FavoriteItem[]>([]);
 
     useFocusEffect(
@@ -62,7 +64,7 @@ export default function FavoritesScreen() {
                 renderItem={renderItem}
                 keyExtractor={(item) => `${item.id}`}
                 numColumns={3}
-                contentContainerStyle={[styles.container, {paddingTop: headerHeight + 20}]}
+                contentContainerStyle={[styles.container, {paddingTop: headerHeight + 20, paddingBottom: insets.bottom}]}
                 columnWrapperStyle={styles.columnWrapper}
                 ListEmptyComponent={() => {
                     return (
@@ -87,7 +89,6 @@ export default function FavoritesScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         paddingHorizontal: cardMarginHorizontal,
     },
     columnWrapper: {
