@@ -10,6 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": true,
       "bundleIdentifier": "com.f0rever.anigo",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
@@ -31,6 +32,12 @@
         {
           "supportsBackgroundPlayback": true,
           "supportsPictureInPicture": true
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
         }
       ],
       [
@@ -63,7 +70,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#e8b830"
         }
       ],
       "expo-build-properties",
