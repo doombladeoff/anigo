@@ -1,6 +1,6 @@
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useColorScheme, StyleSheet, View, TouchableOpacity, ScrollView } from "react-native";
+import { useColorScheme, StyleSheet, View, TouchableOpacity, ScrollView, Switch, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -12,28 +12,33 @@ import { Loader } from "@/components/ui/Loader";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { storage } from "@/utils/storage";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useEffect, useState } from "react";
+import { BlurView } from "expo-blur";
 
+const skipOpening = storage.getSkipOpening()
 export default function ProfileScreen() {
-    const { user } = useAuth();
+    const {user} = useAuth();
     const headerHeight = useHeaderHeight();
     const tabBarHeight = useBottomTabBarHeight();
     const isDark = useColorScheme() === "dark";
-    const { pickImage, isLoadImage } = useGoogleAuth();
+    const {pickImage, isLoadImage} = useGoogleAuth();
+
+    const [isEnable, seIsEnable] = useState<boolean>(storage.getSkipOpening() ?? false);
 
     if (!user) {
         return (
-            <ThemedView style={[styles.container, { marginTop: -headerHeight }]}>
-                <Ionicons name="alert-circle" size={64} color={isDark ? 'white' : 'black'} />
+            <ThemedView style={[styles.container, {marginTop: -headerHeight}]}>
+                <Ionicons name="alert-circle" size={64} color={isDark ? 'white' : 'black'}/>
                 <ThemedText type='subtitle'>Войдите в аккаунт</ThemedText>
                 <TouchableOpacity
                     onPress={() => {
                         storage.setSkip(false);
-                        router.replace({ pathname: '/(auth)' });
+                        router.replace({pathname: '/(auth)'});
                     }}
                     activeOpacity={0.8}
                     style={[
                         styles.loginButton,
-                        { backgroundColor: isDark ? 'white' : 'black' },
+                        {backgroundColor: isDark ? 'white' : 'black'},
                     ]}
                 >
                     <ThemedText type='defaultSemiBold' lightColor="white" darkColor="black">
@@ -45,8 +50,8 @@ export default function ProfileScreen() {
     }
 
     return (
-        <ThemedView style={{ flex: 1 }}>
-            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: tabBarHeight + 20 }}>
+        <ThemedView style={{flex: 1}}>
+            <ScrollView contentContainerStyle={{padding: 20, paddingBottom: tabBarHeight + 20}}>
                 <View style={styles.profileRow}>
                     <TouchableOpacity
                         onPress={pickImage}
@@ -56,18 +61,18 @@ export default function ProfileScreen() {
                     >
                         <View style={styles.avatarContainer}>
                             <Image
-                                source={{ uri: user.avatarURL || user.photoURL || undefined }}
+                                source={{uri: user.avatarURL || user.photoURL || undefined}}
                                 style={styles.avatarImage}
                                 transition={400}
                             />
                             {(!user.avatarURL && !user.photoURL) && (
                                 <View style={styles.avatarOverlay}>
-                                    <IconSymbol name={'person.fill'} color='white' size={32} />
+                                    <IconSymbol name={'person.fill'} color='white' size={32}/>
                                 </View>
                             )}
                             {isLoadImage && (
                                 <View style={styles.avatarOverlay}>
-                                    <Loader size={44} />
+                                    <Loader size={44}/>
                                 </View>
                             )}
                         </View>
@@ -79,14 +84,29 @@ export default function ProfileScreen() {
                     </View>
                 </View>
 
+                <BlurView style={{width: '100%', padding: 10, borderColor: 'white', borderWidth: 0, borderRadius: 12, overflow: 'hidden'}} tint={'systemChromeMaterialDark'} intensity={100}>
+                    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                        <ThemedText type='defaultSemiBold' style={{fontSize: 18}}>Пропускать опенинги</ThemedText>
+                        <Switch value={isEnable} onValueChange={(v) => {
+                            seIsEnable(v);
+                            const skipKey = storage.getSkipOpening();
+                            if(typeof skipKey === 'undefined') {
+                                Alert.alert('Внимание', 'Не все серии имеют пропуск опенинга.', [{text: 'OK'}]);
+                            }
+                            storage.setSkipOpening(v);
+
+                        }} hitSlop={{left: 25, top: 25, right: 25, bottom: 25}}/>
+                    </View>
+                </BlurView>
+
                 <TouchableOpacity
                     onPress={() => {
                         storage.setSkip(false);
                         auth.signOut();
-                        router.replace({ pathname: '/(auth)' });
+                        router.replace({pathname: '/(auth)'});
                     }}
                     activeOpacity={0.8}
-                    style={[styles.logoutButton, { backgroundColor: isDark ? '#ff3b30' : '#222' }]}
+                    style={[styles.logoutButton, {backgroundColor: isDark ? '#ff3b30' : '#222'}]}
                 >
                     <ThemedText type='defaultSemiBold' lightColor="white" darkColor="white">
                         Выйти
@@ -129,7 +149,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         backgroundColor: 'gray',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 5,

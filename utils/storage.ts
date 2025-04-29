@@ -21,6 +21,10 @@ export const storage = {
     setSkip: (value: boolean) => mmkv.set(SKIP_KEY, value),
     getSkip: () => mmkv.getBoolean(SKIP_KEY),
 
+    //SETTINGS
+    setSkipOpening: (value: boolean) => mmkv.set('SKIP_OPENING', value),
+    getSkipOpening: () => mmkv.getBoolean('SKIP_OPENING'),
+
     //Episodes
     setLastViewEpisode: (key: string, value: string) => mmkv.set(`${EPISODE_KEY_PREFIX}$${key}`, value),
     getLastViewEpisode: (key: string) => mmkv.getString(`${EPISODE_KEY_PREFIX}$${key}`),
