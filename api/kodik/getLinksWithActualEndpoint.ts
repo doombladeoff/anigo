@@ -1,8 +1,8 @@
 import { VideoLinks } from "kodikwrapper";
 
 export async function getLinksWithActualEndpoint(
-episodeNumber: string | number,
-episodesObject: Record<string, string>
+    episodeNumber: string | number,
+    episodesObject: Record<string, string>
 ) {
     try {
         const link = episodesObject[episodeNumber];
@@ -22,7 +22,7 @@ episodesObject: Record<string, string>
         }
 
         const endpoint = await VideoLinks.getActualVideoInfoEndpoint(
-        parsedLink.ex.playerSingleUrl
+            parsedLink.ex.playerSingleUrl
         );
 
         const links = await VideoLinks.getLinks({
@@ -30,19 +30,28 @@ episodesObject: Record<string, string>
             videoInfoEndpoint: endpoint,
         });
 
-        return extractSortedLinks(links);
+        return extractSortedLinks(links, parsedLink?.ex?.skipButtons?.data);
     } catch (error) {
         console.error("Ошибка в getLinksWithActualEndpoint:", error);
         return null;
     }
 }
 
-function extractSortedLinks(linksObject: any) {
-    const sortedLinks: (string | null)[] = [];
-
-    sortedLinks[0] = linksObject["720"]?.[0]?.src || null;
-    sortedLinks[1] = linksObject["480"]?.[0]?.src || null;
-    sortedLinks[2] = linksObject["360"]?.[0]?.src || null;
+function extractSortedLinks(linksObject: any, skipTime: any) {
+    const sortedLinks: { url: string | null; skipTime: string }[] = [];
+    
+    sortedLinks[0] = {
+        url: linksObject["720"]?.[0]?.src || null,
+        skipTime: skipTime,
+    };
+    sortedLinks[1] = {
+        url: linksObject["480"]?.[0]?.src || null,
+        skipTime: skipTime,
+    };
+    sortedLinks[2] = {
+        url: linksObject["360"]?.[0]?.src || null,
+        skipTime: skipTime,
+    };
 
     return sortedLinks;
 }

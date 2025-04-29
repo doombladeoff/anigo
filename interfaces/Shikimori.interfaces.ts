@@ -20,6 +20,7 @@ export interface ShikimoriAnime {
     related: Related[];
     screenshots: Screenshot[];
     characterRoles: CharacterRole[];
+    externalLinks: ExternalLinks[];
     description: string;
     airedOn: AiredOn;
     releasedOn: ReleasedOn;
@@ -111,4 +112,10 @@ export interface ReleasedOn {
     month: number;
     day: number;
     date: string;
+}
+
+export interface ExternalLinks {
+    id: string;
+    kind: string;
+    url: string;
 }

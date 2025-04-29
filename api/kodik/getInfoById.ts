@@ -5,20 +5,22 @@ type InfoByIdProps = {
     voicerId: number;
     voicerTitle: string;
     shikiTitleId: number;
+    worldId?: number
 };
 
-export async function getInfoById({token, voicerId, voicerTitle, shikiTitleId}: InfoByIdProps) {
+export async function getInfoById({token, voicerId, voicerTitle, shikiTitleId, worldId}: InfoByIdProps) {
     try {
         const client = Client.fromToken(token);
         const allEpisodesData: any[] = [];
 
         const kodikSeria = await client
-        .search({
-            shikimori_id: shikiTitleId,
-            episode: 1,
-            translation_id: voicerId,
-        })
-        .then((response) => response.results?.shift());
+            .search({
+                worldart_animation_id: worldId,
+                shikimori_id: shikiTitleId,
+                episode: 0,
+                translation_id: voicerId,
+            })
+            .then((response) => response.results?.shift());
 
         if (kodikSeria?.seasons) {
             Object.keys(kodikSeria.seasons).forEach((seasonKey) => {
@@ -29,6 +31,11 @@ export async function getInfoById({token, voicerId, voicerTitle, shikiTitleId}: 
                         episodes: season.episodes,
                     });
                 }
+            });
+        } else {
+            allEpisodesData.push({
+                caster: voicerTitle,
+                episodes: kodikSeria?.link,
             });
         }
 

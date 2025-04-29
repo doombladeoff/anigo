@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, LayoutChangeEvent, ScrollView, TouchableOpacity, View } from "react-native";
+import { LayoutChangeEvent, ScrollView, TouchableOpacity, View } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Stack, useLocalSearchParams, useNavigation } from "expo-router";
 import { useTheme } from "@react-navigation/core";
@@ -38,6 +38,8 @@ export default function AnimeScreen() {
     const [anime, setAnime] = useState<ShikimoriAnime | null>(null);
     const [loading, setLoading] = useState(true);
     const [isFav, setIsFav] = useState(isFavorite === 'true');
+    const [worldArtID, setWorldArtID] = useState<string | null>(null);
+    const [kinopoiskID, setKinopoiskID] = useState<string | null>(null);
 
     const scrollRef = useRef<ScrollView>(null);
     const targetY = useRef(0);
@@ -53,6 +55,10 @@ export default function AnimeScreen() {
             const props: RequestProps = {ids: malId.toString()};
             const [animeData] = await getAnimeList(props);
             setAnime(animeData);
+            const worldArtLink = animeData.externalLinks?.find((link: any) => link.url.startsWith('http://www.world-art.ru/'));
+            setWorldArtID(worldArtLink ? new URL(worldArtLink.url).searchParams.get("id") : null);
+            const kinopoidkLink = animeData.externalLinks?.find((link: any) => link.url.startsWith("https://www.kinopoisk.ru"));
+            setKinopoiskID(kinopoidkLink ? kinopoidkLink.url.match(/\/(?:series|film)\/(\d+)/)?.[1] || null : null);
             if (!isFavorite) {
                 setIsFav(storage.checkIsFavorite(malId.toString()));
             }
@@ -209,7 +215,9 @@ export default function AnimeScreen() {
 
                     <Player
                         malId={Number(anime.malId)}
-                        onLayout={(e: LayoutChangeEvent) => (targetY.current = e.nativeEvent.layout.y)}
+                        worldArt_id={worldArtID ? Number(worldArtID) : undefined}
+                        kinopoisk_id={kinopoiskID ? Number(kinopoiskID) : undefined}
+                        onLayout={(e: LayoutChangeEvent) => targetY.current = e.nativeEvent.layout.y}
                     />
                 </ScrollView>
             </ThemedView>

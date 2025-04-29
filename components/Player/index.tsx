@@ -1,236 +1,218 @@
+import { usePlayerAPI } from "@/hooks/player/usePlayerAPI";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useEvent } from "expo";
-import { ActivityIndicator, Pressable, StyleSheet, View, ViewProps } from "react-native";
+import { useEvent, useEventListener } from "expo";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KodikAPI } from "@/api/kodik";
+import { LayoutChangeEvent, Pressable, StyleSheet, View } from "react-native";
 import { SelectPicker } from "@/components/SelectPicker";
+import { Loader } from "@/components/ui/Loader";
 import { ThemedText } from "@/components/ThemedText";
-import { FontAwesome6 } from "@expo/vector-icons";
-import { Client } from "kodikwrapper";
 import { storage } from "@/utils/storage";
-
-type Voicer = {
-    id: number;
-    title: string;
-};
-
+import { FontAwesome6 } from "@expo/vector-icons";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 type PlayerProps = {
     malId: number;
-} & ViewProps;
+    worldArt_id?: number;
+    kinopoisk_id?: number;
+    onLayout?: (e: LayoutChangeEvent) => void;
+};
 
-export const Player = ({malId, onLayout}: PlayerProps) => {
-    const tokenRef = useRef<string | null>(null);
-    const useNativeControls = useRef(false);
+export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id}: PlayerProps) => {
+    const {
+        voicers,
+        episodes,
+        videoUrl,
+        skipTime,
+        fetchData,
+        fetchEpisodes,
+        fetchVideoUrl,
+        setSelectedEpisode,
+        selectedEpisode,
+        setSelectedCaster,
+        selectedCaster,
+    } = usePlayerAPI(malId, worldArt_id, kinopoisk_id);
 
-    const [selectedCaster, setSelectedCaster] = useState<Voicer | null>(null);
-    const [voicers, setVoicers] = useState<Voicer[]>([]);
-    const [episodes, setEpisodes] = useState<Record<string, string>>({});
-    const [selectedEpisode, setSelectedEpisode] = useState<string | null>(null);
-    const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const isDark = useThemeColor({light: 'black', dark: 'white'}, 'background')
+
+    const playerRef = useRef<VideoView>(null);
+    const hasSkippedRef = useRef(false);
 
     const player = useVideoPlayer(videoUrl, player => {
-        player.loop = true;
-    });
-    const { isPlaying } = useEvent(player, 'playingChange', {
-        isPlaying: player.playing
+        player.timeUpdateEventInterval = 1;
+        player.currentTime = 0;
     });
 
-    const fetchData = async () => {
-        try {
-            tokenRef.current = tokenRef.current || (await KodikAPI.getToken()) || "";
-            const client = Client.fromToken(tokenRef.current);
-            const voiceData = await client.search({
-                shikimori_id: malId,
-                episode: 1,
-            })
-            const translations = voiceData.results
-                .map(item => item.translation)
-                .filter(Boolean);
+    const [useNativeControls, setUseNativeControls] = useState(false);
+    const [showPlayButton, setShowPlayButton] = useState(true);
 
-            setVoicers(translations);
+    const skipOpening = storage.getSkipOpening();
 
-            const savedVoicerId = storage.getEpisodeCaster(`${malId}`);
-            const savedTranslations = translations.find(v => v.id.toString() === savedVoicerId);
-            setSelectedCaster(savedTranslations || translations[0] || null);
-        } catch (error) {
-            console.error("Ошибка при получении озвучек:", error);
-        }
-    };
+    const {isPlaying} = useEvent(player, "playingChange", {isPlaying: player.playing});
+    const {status} = useEvent(player, "statusChange", {status: player.status});
+
+    const videoLoaded = useMemo(() => status === "readyToPlay", [status]);
+
 
     useEffect(() => {
         fetchData();
     }, []);
 
-
-    const fetchEpisodes = async (selectedCaster: Voicer) => {
-        try {
-            const {id, title} = selectedCaster;
-            const episodesData = await KodikAPI.getInfoById({
-                token: tokenRef.current || "",
-                voicerId: id,
-                voicerTitle: title,
-                shikiTitleId: malId,
-            });
-
-            const episodeList = episodesData?.[0]?.episodes ?? {};
-            setEpisodes(episodeList);
-
-            const storedEpisode = storage.getLastViewEpisode(`${malId}`);
-            const firstEpisode = Object.keys(episodeList)[0] ?? null;
-            setSelectedEpisode(storedEpisode && episodeList[storedEpisode] ? storedEpisode : firstEpisode);
-        } catch (error) {
-            console.error("Ошибка при получении серий:", error);
-        }
-    };
+    useEffect(() => {
+        if (selectedCaster) fetchEpisodes(selectedCaster);
+    }, [selectedCaster]);
 
     useEffect(() => {
-        if (!selectedCaster?.id || !tokenRef.current) return;
-        fetchEpisodes(selectedCaster);
-    }, [selectedCaster?.id]);
-
-    useEffect(() => {
-        if (!selectedEpisode || !episodes[selectedEpisode] || !tokenRef.current) return;
-
-        const fetchVideoLink = async () => {
-            try {
-                const links = await KodikAPI.getLinksWithActualEndpoint(selectedEpisode, episodes);
-                const link = links?.[0];
-                setVideoUrl(link?.startsWith("https:") ? link : `https:${link}`);
-            } catch (error) {
-                console.error("Ошибка при получении ссылки на серию:", error);
-            }
-        };
-        fetchVideoLink();
+        if (selectedEpisode) fetchVideoUrl(selectedEpisode);
     }, [selectedEpisode]);
 
-    const handleVoicersSelect = useCallback(
-        (id: string) => {
-            const selected = voicers.find((v) => v.id.toString() === id);
-            if (selected) {
-                setSelectedCaster(selected);
-                setSelectedEpisode(null);
-                storage.setEpisodeCaster(`${malId}`, selected.id.toString());
-            }
-        },
-        [voicers, malId]
-    );
+    useEventListener(player, "timeUpdate", ({currentTime}) => {
+        if (hasSkippedRef.current || !skipOpening || !skipTime) return;
 
-    const handleEpisodeChange = useCallback(
-        (key: string) => {
-            setSelectedEpisode(key);
-            storage.setLastViewEpisode(`${malId}`, key);
-        },
-        [malId]
-    );
+        if (currentTime >= skipTime.start && currentTime <= skipTime.end) {
+            player.currentTime = skipTime.end;
+            hasSkippedRef.current = true;
+        }
+    });
 
-    const episodeOptions = useMemo(
-        () => Object.keys(episodes).map((key) => ({
+    const handleVoicerSelect = useCallback((id: string) => {
+        const selected = voicers.find(v => v.id.toString() === id);
+        if (!selected) return;
+
+        setSelectedCaster(selected);
+        setSelectedEpisode(null);
+        setShowPlayButton(true);
+        setUseNativeControls(false);
+        hasSkippedRef.current = false;
+        storage.setEpisodeCaster(`${malId}`, selected.id.toString());
+    }, [voicers, malId]);
+
+    const handleEpisodeChange = useCallback((key: string) => {
+        setSelectedEpisode(key);
+        setShowPlayButton(true);
+        setUseNativeControls(false);
+        hasSkippedRef.current = false;
+        storage.setLastViewEpisode(`${malId}`, key);
+    }, [malId]);
+
+    const episodeOptions = useMemo(() => (
+        Object.keys(episodes).map(key => ({
             label: `Серия ${key}`,
-            value: key
-        })),
-        [episodes]
-    );
+            value: key,
+        }))
+    ), [episodes]);
+
+    const voicerOptions = useMemo(() => (
+        voicers.map(v => ({
+            label: v.title,
+            value: v.id.toString(),
+        }))
+    ), [voicers]);
+
+    const handlePlayPress = () => {
+        setUseNativeControls(true);
+        setShowPlayButton(false);
+        player.play();
+    };
 
     return (
-    <View style={{marginTop: 10}} onLayout={onLayout}>
-        <View style={{flexDirection: 'row'}}>
-            <SelectPicker
-            title="Серия"
-            options={episodeOptions}
-            onSelect={handleEpisodeChange}
-            >
-                <View style={styles.selectItemContainer}>
-                    <ThemedText>Серия</ThemedText>
-                    <ThemedText>{selectedEpisode || "Не выбрано"}</ThemedText>
-                </View>
-            </SelectPicker>
+        <>
+            <View style={styles.container} onLayout={onLayout}>
+                <View style={styles.playerHeader}>
+                    <SelectPicker title="Серия" options={episodeOptions} onSelect={handleEpisodeChange}>
+                        <View style={[styles.selectItem, {shadowColor: isDark}]}>
+                            <ThemedText lightColor={'white'}>Серия</ThemedText>
+                            <ThemedText lightColor={'white'}>{selectedEpisode || "Не выбрано"}</ThemedText>
+                        </View>
+                    </SelectPicker>
 
-            <SelectPicker
-            title="Озвучка"
-            options={voicers.map((v) => ({
-                label: v.title,
-                value: v.id.toString()
-            }))}
-            onSelect={handleVoicersSelect}
-            >
-                <View style={styles.selectItemContainer}>
-                    <ThemedText>Озвучка</ThemedText>
-                    <ThemedText>{selectedCaster?.title || "Выбрать"}</ThemedText>
+                    <SelectPicker title="Озвучка" options={voicerOptions} onSelect={handleVoicerSelect}>
+                        <View style={[styles.selectItem, {shadowColor: isDark}]}>
+                            <ThemedText lightColor={'white'}>Озвучка</ThemedText>
+                            <ThemedText lightColor={'white'}>{selectedCaster?.title || "Выбрать"}</ThemedText>
+                        </View>
+                    </SelectPicker>
                 </View>
-            </SelectPicker>
-        </View>
-        <View>
-            {videoUrl ? (
-                <>
-                    <Pressable style={[styles.playBtn, {opacity: isPlaying ? 0 : 1}]}
-                               onPress={() => {
-                                   useNativeControls.current = true;
-                                   player.playing ? player.pause() : player.play();
-                               }}>
-                        <FontAwesome6 name="play" size={52} color="white"/>
-                    </Pressable>
-                    <View style={styles.playerPlaceholder}/>
 
-                    <VideoView
-                        style={styles.video}
-                        player={player}
-                        allowsFullscreen={true}
-                        allowsPictureInPicture={true}
-                        startsPictureInPictureAutomatically={true}
-                        nativeControls={useNativeControls.current}
-                    />
-                </>
-            ) : (
-                <View style={{
-                    backgroundColor:'black',
-                    height: 275,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flex: 1,
-                }}>
-                    <ActivityIndicator size="large" color="#fff" />
+                <View>
+                    {videoUrl ? (
+                        <VideoView
+                            style={styles.video}
+                            player={player}
+                            allowsFullscreen
+                            allowsPictureInPicture
+                            contentFit="fill"
+                            startsPictureInPictureAutomatically
+                            nativeControls={useNativeControls}
+                            ref={playerRef}
+                            importantForAccessibility="no"
+                        />
+                    ) : (
+                        <View style={styles.loaderContainer}>
+                            <Loader size={42} color={'white'}/>
+                        </View>
+                    )}
+
+                    {!videoLoaded && (
+                        <View style={styles.overlay}>
+                            <Loader size={44} color={'white'}/>
+                        </View>
+                    )}
+
+                    {videoLoaded && showPlayButton && (
+                        <View style={styles.overlay}>
+                            <Pressable onPress={handlePlayPress} style={styles.iconShadow}>
+                                <FontAwesome6 name="play" size={44} color="white"/>
+                            </Pressable>
+                        </View>
+                    )}
                 </View>
-            )}
-
-        </View>
-    </View>
-    )
+            </View>
+        </>
+    );
 };
 
-
 const styles = StyleSheet.create({
+    container: {
+        marginTop: 10,
+    },
     video: {
         width: "100%",
         height: 275,
     },
-    selectItemContainer: {
+    playerHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        padding: 10,
+    },
+    selectItem: {
         flexDirection: "row",
         alignItems: "center",
         padding: 10,
         gap: 10,
-        backgroundColor: 'rgba( 0, 0, 0, 0.3 )',
+        backgroundColor: 'rgba(0,0,0,1)',
+        shadowOffset: {width: 0, height: 0},
+        shadowOpacity: 0.45,
+        shadowRadius: 7,
+        borderRadius: 15,
     },
-
-    playerPlaceholder: {
-        flex: 1,
-        position: 'absolute',
-        justifyContent: 'center',
+    loaderContainer: {
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        height: 275,
         alignItems: 'center',
-        backgroundColor: 'black',
-        width: '100%',
-        height: 275
+        justifyContent: 'center',
     },
-    playBtn: {
-        position: 'absolute',
-        justifyContent: 'center',
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
         alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        zIndex: 200,
+        justifyContent: 'center',
+        zIndex: 10,
+    },
+    iconShadow: {
         shadowColor: 'black',
         shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.65,
         shadowRadius: 10,
     }
 });
