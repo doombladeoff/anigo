@@ -1,5 +1,4 @@
 import {
-    Image,
     ImageStyle,
     Pressable,
     ScrollView,
@@ -13,6 +12,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import Skeleton from "@/components/ui/Skeleton";
+import { Image } from "expo-image";
 
 interface ScreenshotsListProps {
     images: Screenshot[];
@@ -34,7 +35,15 @@ export const ScreenshotsList = ({
 
     const [imageViewerArr, setImageViewerArr] = useState<Array<ImageSource>>([]);
     const [visible, setVisible] = useState<boolean>(false);
-    const [displayIndex, setDisplayIndex] = useState<number>(0); // только для текста внизу
+    const [displayIndex, setDisplayIndex] = useState<number>(0);
+    const [loadedImages, setLoadedImages] = useState<boolean[]>(new Array(images.length).fill(false));
+
+    useEffect(() => {
+        const arr: Array<ImageSource> = images.map((item) => ({
+            uri: item.originalUrl,
+        }));
+        setImageViewerArr(arr);
+    }, [images]);
 
     useEffect(() => {
         const arr: Array<ImageSource> = images.map((item) => ({
@@ -49,6 +58,14 @@ export const ScreenshotsList = ({
         setVisible(true);
     };
 
+    const handleImageLoad = (index: number) => {
+        setLoadedImages((prev) => {
+            const updated = [...prev];
+            updated[index] = true;
+            return updated;
+        });
+    };
+
     return (
         <>
             <ScrollView
@@ -57,11 +74,23 @@ export const ScreenshotsList = ({
                 contentContainerStyle={containerStyle}
                 bounces={false}
             >
-                {images.slice(0, limitShow).map((image, index) => (
-                    <Pressable key={index} onPress={() => openViewer(index)}>
-                        <Image source={{uri: image.originalUrl}} style={imageStyle}/>
-                    </Pressable>
-                ))}
+                {images.slice(0, limitShow).map((image, index) => {
+                    return (
+                        <Pressable key={index} onPress={() => {
+                            openViewer(index)
+                        }}>
+                            {!loadedImages[index] && (
+                                <Skeleton width={280} height={180} borderRadius={12}/>
+                            )}
+                            <Image
+                                source={{uri: image.originalUrl}}
+                                style={imageStyle}
+                                onLoadEnd={() => handleImageLoad(index)}
+                                transition={1200}
+                            />
+                        </Pressable>
+                    )
+                })}
 
                 {limitShow <= images.length && (
                     <Pressable
