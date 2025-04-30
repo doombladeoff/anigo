@@ -9,15 +9,19 @@ import { ThemedText } from "@/components/ThemedText";
 import { storage } from "@/utils/storage";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { LastWatchAnime } from "@/utils/firebase/LastWatchAnime";
+import { useAuth } from "@/context/AuthContext";
+import { User } from "firebase/auth";
 
 type PlayerProps = {
     malId: number;
     worldArt_id?: number;
     kinopoisk_id?: number;
     onLayout?: (e: LayoutChangeEvent) => void;
+    poster: string,
 };
 
-export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id}: PlayerProps) => {
+export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id, poster}: PlayerProps) => {
     const {
         voicers,
         episodes,
@@ -32,6 +36,7 @@ export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id}: PlayerProps
         selectedCaster,
     } = usePlayerAPI(malId, worldArt_id, kinopoisk_id);
 
+    const {user}= useAuth();
     const isDark = useThemeColor({light: 'black', dark: 'white'}, 'background')
 
     const playerRef = useRef<VideoView>(null);
@@ -108,10 +113,11 @@ export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id}: PlayerProps
         }))
     ), [voicers]);
 
-    const handlePlayPress = () => {
+    const handlePlayPress = async () => {
         setUseNativeControls(true);
         setShowPlayButton(false);
         player.play();
+        await LastWatchAnime({user: user as User, id: malId, episode: selectedEpisode || '', poster})
     };
 
     return (
@@ -140,7 +146,7 @@ export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id}: PlayerProps
                             player={player}
                             allowsFullscreen
                             allowsPictureInPicture
-                            contentFit="fill"
+                            contentFit='contain'
                             startsPictureInPictureAutomatically
                             nativeControls={useNativeControls}
                             ref={playerRef}

@@ -217,6 +217,7 @@ export default function AnimeScreen() {
                         malId={Number(anime.malId)}
                         worldArt_id={worldArtID ? Number(worldArtID) : undefined}
                         kinopoisk_id={kinopoiskID ? Number(kinopoiskID) : undefined}
+                        poster={anime.poster.originalUrl}
                         onLayout={(e: LayoutChangeEvent) => targetY.current = e.nativeEvent.layout.y}
                     />
                 </ScrollView>

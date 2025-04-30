@@ -12,10 +12,11 @@ import { Loader } from "@/components/ui/Loader";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { storage } from "@/utils/storage";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BlurView } from "expo-blur";
 
-const skipOpening = storage.getSkipOpening()
+const skipOpening = storage.getSkipOpening();
+
 export default function ProfileScreen() {
     const {user} = useAuth();
     const headerHeight = useHeaderHeight();
@@ -23,13 +24,13 @@ export default function ProfileScreen() {
     const isDark = useColorScheme() === "dark";
     const {pickImage, isLoadImage} = useGoogleAuth();
 
-    const [isEnable, seIsEnable] = useState<boolean>(storage.getSkipOpening() ?? false);
+    const [isSkipOpeningEnabled, setSkipOpeningEnabled] = useState<boolean>(skipOpening ?? false);
 
     if (!user) {
         return (
-            <ThemedView style={[styles.container, {marginTop: -headerHeight}]}>
+            <ThemedView style={[styles.centerContainer, {marginTop: -headerHeight}]}>
                 <Ionicons name="alert-circle" size={64} color={isDark ? 'white' : 'black'}/>
-                <ThemedText type='subtitle'>Войдите в аккаунт</ThemedText>
+                <ThemedText type="subtitle">Войдите в аккаунт</ThemedText>
                 <TouchableOpacity
                     onPress={() => {
                         storage.setSkip(false);
@@ -41,7 +42,7 @@ export default function ProfileScreen() {
                         {backgroundColor: isDark ? 'white' : 'black'},
                     ]}
                 >
-                    <ThemedText type='defaultSemiBold' lightColor="white" darkColor="black">
+                    <ThemedText type="defaultSemiBold" lightColor="white" darkColor="black">
                         Войти
                     </ThemedText>
                 </TouchableOpacity>
@@ -67,7 +68,7 @@ export default function ProfileScreen() {
                             />
                             {(!user.avatarURL && !user.photoURL) && (
                                 <View style={styles.avatarOverlay}>
-                                    <IconSymbol name={'person.fill'} color='white' size={32}/>
+                                    <IconSymbol name="person.fill" color="white" size={32}/>
                                 </View>
                             )}
                             {isLoadImage && (
@@ -79,36 +80,71 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
 
                     <View style={styles.userInfo}>
-                        <ThemedText type='title' style={styles.userName}>{user?.displayName}</ThemedText>
-                        <ThemedText type='defaultSemiBold'>{user?.email}</ThemedText>
+                        <ThemedText type="title" style={styles.userName}>{user.displayName}</ThemedText>
+                        <ThemedText type="defaultSemiBold">{user.email}</ThemedText>
                     </View>
                 </View>
 
-                <BlurView style={{width: '100%', padding: 10, borderColor: 'white', borderWidth: 0, borderRadius: 12, overflow: 'hidden'}} tint={'systemChromeMaterialDark'} intensity={100}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-                        <ThemedText type='defaultSemiBold' style={{fontSize: 18}}>Пропускать опенинги</ThemedText>
-                        <Switch value={isEnable} onValueChange={(v) => {
-                            seIsEnable(v);
-                            const skipKey = storage.getSkipOpening();
-                            if(typeof skipKey === 'undefined') {
-                                Alert.alert('Внимание', 'Не все серии имеют пропуск опенинга.', [{text: 'OK'}]);
-                            }
-                            storage.setSkipOpening(v);
+                <View style={styles.lastWatchContainer}>
+                    <Image
+                        source={{uri: user.lastAnimePoster}}
+                        style={[styles.poster, {borderColor: isDark ? 'white' : 'black'}]}
+                        transition={400}
+                        contentFit="fill"
+                    />
+                    <View style={{flex: 1, gap: 10}}>
+                        <ThemedText type="subtitle" style={styles.lastEpisode}>
+                            Последний просмотренный эпизод: {user.lastEpisode}
+                        </ThemedText>
+                        <TouchableOpacity
+                            style={styles.continueBtn}
+                            onPress={() => {
+                                router.push({pathname: '/(screens)/[id]', params: {id: user.lastAnime}});
+                            }}
+                        >
+                            <ThemedText type="defaultSemiBold" style={styles.continueText}>
+                                Продолжить
+                            </ThemedText>
+                        </TouchableOpacity>
+                    </View>
+                </View>
 
-                        }} hitSlop={{left: 25, top: 25, right: 25, bottom: 25}}/>
+                <BlurView
+                    style={styles.skipSwitchContainer}
+                    tint="systemChromeMaterialDark"
+                    intensity={100}
+                >
+                    <View style={styles.switchRow}>
+                        <ThemedText type="defaultSemiBold" style={styles.switchText}>
+                            Пропускать опенинги
+                        </ThemedText>
+                        <Switch
+                            value={isSkipOpeningEnabled}
+                            onValueChange={(value) => {
+                                setSkipOpeningEnabled(value);
+                                if (typeof skipOpening === 'undefined') {
+                                    Alert.alert('Внимание', 'Не все серии имеют пропуск опенинга.', [{text: 'OK'}]);
+                                }
+                                storage.setSkipOpening(value);
+                            }}
+                            hitSlop={{left: 25, top: 25, right: 25, bottom: 25}}
+                        />
                     </View>
                 </BlurView>
 
                 <TouchableOpacity
                     onPress={() => {
+                        router.replace({pathname: '/(auth)'});
                         storage.setSkip(false);
                         auth.signOut();
-                        router.replace({pathname: '/(auth)'});
                     }}
                     activeOpacity={0.8}
-                    style={[styles.logoutButton, {backgroundColor: isDark ? '#ff3b30' : '#222'}]}
+                    style={[
+                        styles.logoutButton,
+                        {backgroundColor: isDark ? '#ff3b30' : '#222'},
+                    ]}
                 >
-                    <ThemedText type='defaultSemiBold' lightColor="white" darkColor="white">
+                    <ThemedText type="defaultSemiBold" lightColor="white" darkColor="white">
                         Выйти
                     </ThemedText>
                 </TouchableOpacity>
@@ -118,7 +154,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
+    centerContainer: {
         flex: 1,
         paddingHorizontal: 10,
         justifyContent: 'center',
@@ -173,6 +209,53 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 22,
         marginBottom: 4,
+    },
+    lastWatchContainer: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 10,
+    },
+    poster: {
+        width: 140,
+        height: 200,
+        borderRadius: 12,
+        overflow: 'hidden',
+        borderWidth: 2,
+    },
+    lastEpisode: {
+        fontSize: 16,
+        marginBottom: 10,
+    },
+    continueBtn: {
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        backgroundColor: 'orange',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 8,
+        shadowColor: 'black',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+    },
+    continueText: {
+        fontSize: 18,
+        color: 'white',
+    },
+    skipSwitchContainer: {
+        width: '100%',
+        padding: 10,
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginTop: 10,
+    },
+    switchRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    switchText: {
+        fontSize: 18,
     },
     logoutButton: {
         marginTop: 30,
