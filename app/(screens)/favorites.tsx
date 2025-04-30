@@ -1,13 +1,13 @@
 import { Dimensions, FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
-import { useCallback, useState } from "react";
-import { useFocusEffect, router } from "expo-router";
+import { router } from "expo-router";
 import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { FavoriteItem, storage } from "@/utils/storage";
+import { FavoriteItem } from "@/utils/storage";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Entypo, FontAwesome6 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFavorites } from "@/context/FavoritesContext";
 
 const screenWidth = Dimensions.get('window').width;
 const numColumns = 3;
@@ -18,17 +18,7 @@ const cardHeight = cardWidth * 1.5;
 export default function FavoritesScreen() {
     const headerHeight = useHeaderHeight();
     const insets = useSafeAreaInsets();
-    const [data, setData] = useState<FavoriteItem[]>([]);
-
-    useFocusEffect(
-        useCallback(() => {
-            const fetchData = async () => {
-                const favorites = storage.getFavorites();
-                setData(favorites || []);
-            };
-            fetchData();
-        }, [])
-    );
+    const {favorites} = useFavorites();
 
     const renderItem = ({item}: { item: FavoriteItem }) => {
 
@@ -60,21 +50,18 @@ export default function FavoritesScreen() {
     return (
         <ThemedView style={{flex: 1}}>
             <FlatList
-                data={data}
+                data={favorites}
                 renderItem={renderItem}
                 keyExtractor={(item) => `${item.id}`}
                 numColumns={3}
-                contentContainerStyle={[styles.container, {paddingTop: headerHeight + 20, paddingBottom: insets.bottom}]}
+                contentContainerStyle={favorites.length == 0 ? {flex: 1} : [styles.container, {
+                    paddingTop: headerHeight + 20,
+                    paddingBottom: insets.bottom
+                }]}
                 columnWrapperStyle={styles.columnWrapper}
                 ListEmptyComponent={() => {
                     return (
-                        <View style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: 10,
-                            marginTop: -headerHeight - 20
-                        }}>
+                        <View style={[styles.emptyContainer, {marginTop: -headerHeight - 20}]}>
                             <Entypo name="cross" size={34} color="white"
                                     style={{position: 'absolute', transform: [{translateX: -6}, {translateY: -27}]}}/>
                             <FontAwesome6 name="magnifying-glass" size={70} color="white"/>
@@ -115,4 +102,10 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '500'
     },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
+    }
 });

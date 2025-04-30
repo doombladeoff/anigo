@@ -3,8 +3,10 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { TouchableOpacity } from "react-native";
 import { useNavigationState } from "@react-navigation/core";
 import { FontAwesome6 } from "@expo/vector-icons";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ScreensLayout() {
+    const {user} = useAuth()
     const iconColor = useThemeColor({dark: 'white', light: 'black'}, 'icon');
 
     const navState = useNavigationState((state) => state);
@@ -12,7 +14,6 @@ export default function ScreensLayout() {
     const goBackSafe = () => {
         navState?.routes?.length > 1 ? router.back() : router.replace('/')
     };
-
     return (
         <Stack
             screenOptions={{
@@ -30,7 +31,7 @@ export default function ScreensLayout() {
             }}
         >
             <Stack.Screen name="[id]"/>
-            <Stack.Screen name="favorites" options={{headerTitle: "Избранные"}}/>
+            {user ? <Stack.Screen name="favorites" options={{headerTitle: "Избранные"}}/> : null}
         </Stack>
     );
 }

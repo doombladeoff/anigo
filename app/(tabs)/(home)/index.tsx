@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { YummyAPI } from "@/api/Yummy";
 import Animated, { ScrollHandlerProcessed } from "react-native-reanimated";
 import AnimatedRefreshLoader from "@/components/ui/RefreshLoader";
+import { useAuth } from "@/context/AuthContext";
 
 const listStyles = {
     containerStyle: {paddingHorizontal: 10, gap: 10},
@@ -26,6 +27,7 @@ export default function HomeScreen() {
     const insets = useSafeAreaInsets();
     const bottomTabHeight = useBottomTabBarHeight();
     const {animeList} = useAnimeList();
+    const {user} = useAuth()
 
     const [refreshing, setRefreshing] = useState(false);
     const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -55,11 +57,13 @@ export default function HomeScreen() {
                     <ThemedText type="title">AniGO</ThemedText>
                     <HelloWave/>
                 </View>
-                <TouchableOpacity activeOpacity={0.8} hitSlop={10} onPress={() => {
-                    router.push({pathname: '/(screens)/favorites'})
-                }}>
-                    <FontAwesome name={'bookmark'} size={32} color="orange" style={{paddingHorizontal: 15}}/>
-                </TouchableOpacity>
+                {user &&
+                    <TouchableOpacity activeOpacity={0.8} hitSlop={10} onPress={() => {
+                        router.push({pathname: '/(screens)/favorites'})
+                    }}>
+                        <FontAwesome name={'bookmark'} size={32} color="orange" style={{paddingHorizontal: 15}}/>
+                    </TouchableOpacity>
+                }
             </View>
 
             <AnimatedRefreshLoader refreshing={refreshing} scrollHandlerRef={scrollHandlerRef}/>

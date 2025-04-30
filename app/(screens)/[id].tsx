@@ -15,13 +15,17 @@ import { ScreenshotsList } from "@/components/AnimeScreen/Screenshots";
 import { Player } from "@/components/Player";
 import { Description } from "@/components/AnimeScreen/Description";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { storage } from "@/utils/storage";
 
 import { ShikimoriAnime } from "@/interfaces/Shikimori.interfaces";
-import { RequestProps } from "@/interfaces/ShikimoriRequest.interfaces";
+
+;
 import { ShareButton } from "@/components/ui/ShareButton";
 import { Loader } from "@/components/ui/Loader";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { useAuth } from "@/context/AuthContext";
+import { isAnimeInFavorites, } from "@/utils/firebase/userFavorite";
+import * as Haptics from "expo-haptics";
+import { useFavorites } from "@/context/FavoritesContext";
 
 const GRADIENT_COLORS = {
     dark: ["transparent", "rgba(21,23,24,0.85)", "rgba(21,23,24,0.95)", "rgba(21,23,24,1)"],
@@ -32,11 +36,15 @@ export default function AnimeScreen() {
     const {id: malId, isFavorite} = useLocalSearchParams();
     const navigation = useNavigation();
 
+    const {user} = useAuth();
+    const {addFavorite, removeFavorite} = useFavorites();
+
     const {dark: isDark} = useTheme();
     const iconColor = useThemeColor({light: "black", dark: "white"}, "icon");
 
     const [anime, setAnime] = useState<ShikimoriAnime | null>(null);
     const [loading, setLoading] = useState(true);
+    const [buttonDisabled, setButtonDisabled] = useState(false);
     const [isFav, setIsFav] = useState(isFavorite === 'true');
     const [worldArtID, setWorldArtID] = useState<string | null>(null);
     const [kinopoiskID, setKinopoiskID] = useState<string | null>(null);
@@ -51,19 +59,29 @@ export default function AnimeScreen() {
     }));
 
     useEffect(() => {
-        (async () => {
-            const props: RequestProps = {ids: malId.toString()};
-            const [animeData] = await getAnimeList(props);
-            setAnime(animeData);
-            const worldArtLink = animeData.externalLinks?.find((link: any) => link.url.startsWith('http://www.world-art.ru/'));
-            setWorldArtID(worldArtLink ? new URL(worldArtLink.url).searchParams.get("id") : null);
-            const kinopoidkLink = animeData.externalLinks?.find((link: any) => link.url.startsWith("https://www.kinopoisk.ru"));
-            setKinopoiskID(kinopoidkLink ? kinopoidkLink.url.match(/\/(?:series|film)\/(\d+)/)?.[1] || null : null);
-            if (!isFavorite) {
-                setIsFav(storage.checkIsFavorite(malId.toString()));
+        const fetchAnime = async () => {
+            try {
+                const [animeData] = await getAnimeList({ids: malId.toString()});
+                setAnime(animeData);
+
+                const worldArtLink = animeData.externalLinks?.find((link: any) => link.url.startsWith('http://www.world-art.ru/'));
+                if (worldArtLink?.url) setWorldArtID(worldArtLink ? new URL(worldArtLink.url).searchParams.get("id") : null);
+
+                const kinopoidkLink = animeData.externalLinks?.find((link: any) => link.url.startsWith("https://www.kinopoisk.ru"));
+                if (kinopoidkLink?.url) setKinopoiskID(kinopoidkLink.url.match(/\/(?:series|film)\/(\d+)/)?.[1] || null);
+
+                if (!isFavorite && user) {
+                    const res = await isAnimeInFavorites(user.uid, malId.toString());
+                    setIsFav(res);
+                }
+
+                setLoading(false);
+            } catch (e) {
+                console.error(e)
             }
-            setLoading(false);
-        })();
+
+        };
+        fetchAnime();
     }, [malId]);
 
     useEffect(() => {
@@ -73,18 +91,21 @@ export default function AnimeScreen() {
     }, [anime]);
 
     const handleBookmarkToggle = async () => {
+        if (buttonDisabled) return;
+        const poster = anime?.poster.originalUrl || "";
+        const title = anime?.russian || "";
+
+        isFav ? removeFavorite(malId.toString()) : addFavorite({id: Number(malId), title, poster})
+
+        setIsFav(!isFav);
+
+        setButtonDisabled(true);
+        setTimeout(() => setButtonDisabled(false), 1000);
         scale.value = withSpring(1.2, {stiffness: 200}, () => {
             scale.value = withSpring(1);
         });
-        const id = malId.toString();
 
-        if (isFav) {
-            storage.removeFavorite(id);
-            setIsFav(false);
-        } else {
-            storage.addFavorite({id, poster: anime?.poster.originalUrl || "", title: anime?.russian || ""});
-            setIsFav(true);
-        }
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
     };
 
     const handleWatchPress = () => {
@@ -184,15 +205,17 @@ export default function AnimeScreen() {
                             </ThemedText>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={handleBookmarkToggle} hitSlop={12}>
-                            <Animated.View style={animatedStyle}>
-                                <FontAwesome
-                                    name={isFav ? "bookmark" : "bookmark-o"}
-                                    size={32}
-                                    color="#e7b932"
-                                />
-                            </Animated.View>
-                        </TouchableOpacity>
+                        {user &&
+                            <TouchableOpacity onPress={handleBookmarkToggle} hitSlop={12} disabled={buttonDisabled}>
+                                <Animated.View style={animatedStyle}>
+                                    <FontAwesome
+                                        name={isFav ? "bookmark" : "bookmark-o"}
+                                        size={32}
+                                        color="#e7b932"
+                                    />
+                                </Animated.View>
+                            </TouchableOpacity>
+                        }
                     </View>
 
                     <GenresList
