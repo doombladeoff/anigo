@@ -1,6 +1,7 @@
-import { ScrollView, TextStyle, View, ViewStyle } from "react-native";
+import { ScrollView, TextStyle, TouchableOpacity, View, ViewStyle } from "react-native";
 import { Genre } from "@/interfaces/Shikimori.interfaces";
 import { ThemedText } from "@/components/ThemedText";
+import { router } from "expo-router";
 
 interface GenresListProps {
     genres: Genre[];
@@ -30,13 +31,17 @@ export const GenresList = ({
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={containerStyle}>
                 {genres.map((genre, index) => {
                     return (
-                        <View style={genreStyle} key={index}>
+                        <TouchableOpacity style={genreStyle} key={index} activeOpacity={0.8} hitSlop={12}
+                                          onPress={() => router.push({
+                                              pathname: '/(screens)/animeListByGenre',
+                                              params: {genre_id: genre.id, genre_name: genre.russian}
+                                          })}>
                             <ThemedText
                                 type="subtitle"
                                 style={[{fontSize: 14}, genreTextStyle]}
                                 key={index}
                             >{genre.russian}</ThemedText>
-                        </View>
+                        </TouchableOpacity>
                     )
                 })}
             </ScrollView>

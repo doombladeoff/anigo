@@ -4,15 +4,16 @@ import { TouchableOpacity } from "react-native";
 import { useNavigationState } from "@react-navigation/core";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
+import { useSearchContext } from "@/context/SearchContext";
 
 export default function ScreensLayout() {
-    const {user} = useAuth()
+    const {user} = useAuth();
+    const {setSearchResults} = useSearchContext()
     const iconColor = useThemeColor({dark: 'white', light: 'black'}, 'icon');
 
     const navState = useNavigationState((state) => state);
-
     const goBackSafe = () => {
-        navState?.routes?.length > 1 ? router.back() : router.replace('/')
+        navState?.routes?.length > 1 ? router.back() : router.replace('/');
     };
     return (
         <Stack
@@ -23,7 +24,10 @@ export default function ScreensLayout() {
                 headerTitle: '',
                 headerLeft: () => {
                     return (
-                        <TouchableOpacity onPress={() => goBackSafe()} activeOpacity={0.8} hitSlop={30}>
+                        <TouchableOpacity onPress={() => {
+                            goBackSafe();
+                            setSearchResults([]);
+                        }} activeOpacity={0.8} hitSlop={30}>
                             <FontAwesome6 name="arrow-left" size={28} color={iconColor}/>
                         </TouchableOpacity>
                     );
@@ -31,6 +35,7 @@ export default function ScreensLayout() {
             }}
         >
             <Stack.Screen name="[id]"/>
+            <Stack.Screen name="animeListByGenre"/>
             {user ? <Stack.Screen name="favorites" options={{headerTitle: "Избранные"}}/> : null}
         </Stack>
     );

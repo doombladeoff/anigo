@@ -14,6 +14,7 @@ export const GET_ANIMES = gql`
       $rating: RatingString
       $page: Int!
       $season: SeasonString
+      $genre: String
     ) {
       animes(
         search: $search
@@ -26,6 +27,7 @@ export const GET_ANIMES = gql`
         rating: $rating
         page: $page
         season: $season
+        genre: $genre
       ) {
         id
         malId
@@ -175,6 +177,7 @@ apolloClient?: ApolloClient<NormalizedCacheObject>
         rating,
         page = 1,
         season,
+        genre
     } = props;
 
     const adjustedLimit = Math.min(limit ?? 2, 50);
@@ -189,6 +192,7 @@ apolloClient?: ApolloClient<NormalizedCacheObject>
         ...(rating?.length && {rating: rating.join(",")}),
         order,
         season,
+        genre,
         limit: adjustedLimit,
         page: pageDefault,
     };
@@ -198,7 +202,6 @@ apolloClient?: ApolloClient<NormalizedCacheObject>
             query: GET_ANIMES,
             variables,
         });
-
         return data.animes;
     } catch (error) {
         console.error("Error fetching anime list:", error);

@@ -7,11 +7,13 @@ import { ApolloProvider } from "@apollo/client";
 import client from "@/api/shikimori/client";
 import { AuthProvider } from "@/context/AuthContext";
 import { FavoritesProvider } from "@/context/FavoritesContext";
+import { SearchProvider } from "@/context/SearchContext";
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
     return (
         <AuthProvider>
+            <SearchProvider>
             <FavoritesProvider>
                 <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                     <ApolloProvider client={client}>
@@ -25,6 +27,7 @@ export default function RootLayout() {
                     </ApolloProvider>
                 </ThemeProvider>
             </FavoritesProvider>
+            </SearchProvider>
         </AuthProvider>
     );
 }

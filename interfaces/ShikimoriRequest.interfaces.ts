@@ -38,4 +38,5 @@ export interface RequestProps {
     page?: number;
     /* year (examples 2016, 2014_2016, summer_2017) */
     season?: string;
+    genre?: string;
 }
