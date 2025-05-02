@@ -134,7 +134,7 @@ export const SearchHeader = () => {
     const [isPressed, setIsPressed] = useState(false);
     const isDark = useColorScheme();
 
-    const {handleSearch} = useSearchContext();
+    const {handleSearch, setSearchResults} = useSearchContext();
     const [searchText, setSearchText] = useState('');
     const [debouncedSearchText, setDebouncedSearchText] = useState("");
 
@@ -171,14 +171,10 @@ export const SearchHeader = () => {
     }, [debouncedSearchText, handleSearch])
 
     const handleApply = () => {
+        setSearchResults([]);
         const cleanedFilters = getCleanedFilters();
-
-        if (debouncedSearchText.length === 0) {
-            setModalShow(false);
-        } else {
-            handleSearch(debouncedSearchText, cleanedFilters);
-            setModalShow(false);
-        }
+        handleSearch(debouncedSearchText, cleanedFilters);
+        setModalShow(false);
     };
 
 

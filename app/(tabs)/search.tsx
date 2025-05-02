@@ -1,8 +1,9 @@
 import { router } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
 import {
-    ActivityIndicator,
-    FlatList, Keyboard, StyleSheet,
+    FlatList,
+    Keyboard,
+    StyleSheet,
     TouchableOpacity,
     TouchableWithoutFeedback,
     View
@@ -13,20 +14,18 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { AntDesign } from "@expo/vector-icons";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSearchContext, } from "@/context/SearchContext";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { Loader } from "@/components/ui/Loader";
 
 export default function SearchScreen() {
     const headerHeight = useHeaderHeight();
     const bottomHeight = useBottomTabBarHeight();
 
-    const {searchResults, isLoad} = useSearchContext();
+    const {searchResults, isLoad, loadMore} = useSearchContext();
 
-    const theme = useColorScheme();
-
-    if (isLoad) {
+    if (isLoad && searchResults.length === 0) {
         return (
             <ThemedView style={{flex: 1, padding: 10, justifyContent: 'center', alignItems: 'center'}}>
-                <ActivityIndicator size="large" color={theme === 'dark' ? 'white' : 'black'}/>
+                <Loader size={38}/>
             </ThemedView>
         );
     }
@@ -35,7 +34,7 @@ export default function SearchScreen() {
         <ThemedView style={{flex: 1, padding: 10}}>
             <FlatList
                 data={searchResults}
-                keyExtractor={(item, index) => index.toString()}
+                keyExtractor={(item, index) => item.malId.toString() + index.toString()}
                 renderItem={({item}) => (
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                         <View style={{flexDirection: 'row'}}>
@@ -89,7 +88,10 @@ export default function SearchScreen() {
                     paddingTop: headerHeight,
                     gap: 10
                 }}
+                ListFooterComponent={() => isLoad && <View><Loader size={34}/></View>}
                 keyboardShouldPersistTaps="handled"
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.75}
             />
         </ThemedView>
     );
