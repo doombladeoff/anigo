@@ -6,6 +6,7 @@ import Animated, {
     useAnimatedScrollHandler,
     withTiming,
 } from 'react-native-reanimated';
+import * as Haptics from "expo-haptics"
 import { Loader } from "@/components/ui/Loader";
 
 const PULL_DISTANCE = 150;
@@ -26,6 +27,7 @@ export default function AnimatedRefreshLoader({refreshing, scrollHandlerRef}: An
 
     useEffect(() => {
         if (!refreshing) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
             loaderOpacity.value = withTiming(0, {duration: 0});
         }
     }, [refreshing]);
