@@ -16,6 +16,7 @@ import { useState } from "react";
 import { BlurView } from "expo-blur";
 
 const skipOpening = storage.getSkipOpening();
+const hideComments = storage.getShowComments();
 
 export default function ProfileScreen() {
     const {user} = useAuth();
@@ -25,6 +26,7 @@ export default function ProfileScreen() {
     const {pickImage, isLoadImage} = useGoogleAuth();
 
     const [isSkipOpeningEnabled, setSkipOpeningEnabled] = useState<boolean>(skipOpening ?? false);
+    const [isHideComments, setIsHideComments] = useState<boolean>(hideComments ?? false);
 
     if (!user) {
         return (
@@ -110,7 +112,7 @@ export default function ProfileScreen() {
                 </View>
 
                 <BlurView
-                    style={styles.skipSwitchContainer}
+                    style={styles.settingsContainer}
                     tint="systemChromeMaterialDark"
                     intensity={100}
                 >
@@ -126,6 +128,21 @@ export default function ProfileScreen() {
                                     Alert.alert('Внимание', 'Не все серии имеют пропуск опенинга.', [{text: 'OK'}]);
                                 }
                                 storage.setSkipOpening(value);
+                            }}
+                            hitSlop={{left: 25, top: 25, right: 25, bottom: 25}}
+                        />
+                    </View>
+                    <View
+                        style={{flex: 1, backgroundColor: isDark ? 'white' : 'black', height: 0.3, marginVertical: 5}}/>
+                    <View style={styles.switchRow}>
+                        <ThemedText type="defaultSemiBold" style={styles.switchText}>
+                            Откл. комментарии
+                        </ThemedText>
+                        <Switch
+                            value={isHideComments}
+                            onValueChange={(value) => {
+                                setIsHideComments(value);
+                                storage.setShowComments(value);
                             }}
                             hitSlop={{left: 25, top: 25, right: 25, bottom: 25}}
                         />
@@ -242,12 +259,13 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: 'white',
     },
-    skipSwitchContainer: {
+    settingsContainer: {
         width: '100%',
         padding: 10,
         borderRadius: 12,
         overflow: 'hidden',
         marginTop: 10,
+        gap: 10
     },
     switchRow: {
         flexDirection: 'row',
