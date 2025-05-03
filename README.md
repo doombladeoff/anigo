@@ -1,11 +1,9 @@
 # Anigo
 
-<p align="center">
-   ![Expo](https://img.shields.io/badge/Expo-SDK--52-blue?logo=expo)
-   ![React Native](https://img.shields.io/badge/React%20Native-0.76-brightgreen?logo=react)
-   ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)
-   ![License](https://img.shields.io/github/license/doombladeoff/anigo?style=flat)
-</p>
+![Expo](https://img.shields.io/badge/Expo-SDK--52-blue?logo=expo)
+![React Native](https://img.shields.io/badge/React%20Native-0.76-brightgreen?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)
+![License](https://img.shields.io/github/license/doombladeoff/anigo?style=flat)
 
 **AniGO** is a cross-platform mobile application developed with Expo and React Native, aiming to provide anime fans with a seamless experience to explore and enjoy their favorite anime content.
 
