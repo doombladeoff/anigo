@@ -1,6 +1,6 @@
 export const cleanedText = (text: string): string => {
-    const tagsWithAttributes = ['character', 'anime', 'person', 'url' ];
-    const simpleTags = ['i', 'b', 'u'];
+    const tagsWithAttributes = ['character', 'anime', 'person', 'url', 'spoiler', 'manga' ];
+    const simpleTags = ['i', 'b', 'u', 'spoiler', 'manga'];
 
     let cleaned = text;
 

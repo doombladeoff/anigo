@@ -33,6 +33,7 @@ import * as Haptics from "expo-haptics";
 import { useFavorites } from "@/context/FavoritesContext";
 import { Comments } from "@/components/AnimeScreen/Comments";
 import { storage } from "@/utils/storage";
+import { Characters } from "@/components/AnimeScreen/Characters";
 
 const GRADIENT_COLORS = {
     dark: ["transparent", "rgba(18,18,18,0.85)", "rgba(18,18,18,0.95)", "rgba(18,18,18,1)"],
@@ -264,6 +265,8 @@ export default function AnimeScreen() {
                             containerStyle={{paddingHorizontal: 10, gap: 10, paddingTop: 10}}
                         />
 
+                        <Characters characters={anime.characterRoles}/>
+                        
                         <Player
                             malId={Number(anime.malId)}
                             worldArt_id={worldArtID ? Number(worldArtID) : undefined}

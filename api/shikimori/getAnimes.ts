@@ -112,8 +112,10 @@ export const GET_ANIMES = gql`
           character {
             id
             name
+            russian
             poster {
-              id
+            id 
+            mainUrl
             }
           }
         }
@@ -157,8 +159,6 @@ export const GET_ANIMES = gql`
         }
 
         description
-        descriptionHtml
-        descriptionSource
       }
     }
   `;

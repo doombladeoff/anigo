@@ -69,16 +69,16 @@ export interface CharacterRole {
 
 export interface Character {
     createdAt: Date;
-    description: String;
-    descriptionHtml: String;
-    descriptionSource: String;
+    description: string;
+    descriptionHtml: string;
+    descriptionSource: string;
     id: number;
-    isAnime: Boolean;
-    isManga: Boolean;
-    isRanobe: Boolean;
+    isAnime: boolean;
+    isManga: boolean;
+    isRanobe: boolean;
     japanese: string;
     malId: number;
-    name: String;
+    name: string;
     poster: Poster;
     russian: string;
     synonyms: string[];
