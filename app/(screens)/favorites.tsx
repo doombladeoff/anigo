@@ -9,9 +9,10 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { Entypo, FontAwesome6 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFavorites } from "@/context/FavoritesContext";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { BlurView } from "expo-blur";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import ContextMenu from "react-native-context-menu-view"
 
 const screenWidth = Dimensions.get('window').width;
 const numColumns = 3;
@@ -24,10 +25,10 @@ export default function FavoritesScreen() {
     const insets = useSafeAreaInsets();
     const isDark = useColorScheme() === 'dark';
     const iconColor = useThemeColor({ light: 'black', dark: 'white' }, 'icon');
-    const { favorites, sortFavorite, setSortType, sortType } = useFavorites();
+    const { favorites, sortFavorite, setSortType, sortType, removeFavorite } = useFavorites();
     const [isOpenSort, setIsOpenSort] = useState<boolean>(false);
 
-    const renderItem = ({ item }: { item: FavoriteItem }) => {
+    const renderItem = useCallback(({ item }: { item: FavoriteItem }) => {
 
         return (
             <View key={item.id} style={[styles.card, { width: cardWidth }]}>
@@ -40,19 +41,47 @@ export default function FavoritesScreen() {
                         })
                     }
                 >
-                    <Image
-                        source={{ uri: item.poster }}
-                        style={styles.image}
-                        contentFit="cover"
-                        transition={400}
-                    />
+                    <ContextMenu
+                        title={'Избранное'}
+                        actions={[
+                            {
+                                title: 'Удалить из избранного',
+                                systemIcon: 'trash.fill',
+                                inlineChildren: true,
+                                iconColor:'red',
+                                destructive: true,
+                        
+                            },
+                        ]}
+                        previewBackgroundColor={'transparent'}
+                        preview={
+                            <Image
+                                source={{ uri: item.poster }}
+                                style={[styles.image, {backgroundColor: 'transparent'}]}
+                                contentPosition="center"
+                                contentFit="cover"
+                                transition={600}
+                            />
+                        }
+                        onPress={() => {
+                            removeFavorite(item.id.toString());
+                        }}
+                    >
+                        <Image
+                            source={{ uri: item.poster }}
+                            style={styles.image}
+                            contentFit="cover"
+                            cachePolicy='memory-disk'
+                            transition={600}
+                        />
+                    </ContextMenu>
                 </TouchableOpacity>
                 <ThemedText numberOfLines={2} ellipsizeMode="tail" style={styles.title}>
                     {item.title}
                 </ThemedText>
             </View>
         );
-    };
+    }, [iconColor, favorites]);
 
     return (
         <>
@@ -69,7 +98,7 @@ export default function FavoritesScreen() {
                 <FlatList
                     data={favorites}
                     renderItem={renderItem}
-                    keyExtractor={(item, index) => `${item.id}-${index}`}
+                    keyExtractor={(item, index) => `${item.id}`}
                     numColumns={3}
                     contentContainerStyle={favorites.length == 0 ? { flex: 1 } : [styles.container, {
                         paddingTop: headerHeight + 20,
@@ -86,6 +115,9 @@ export default function FavoritesScreen() {
                             </View>
                         )
                     }}
+                    removeClippedSubviews
+                    initialNumToRender={12}
+                    maxToRenderPerBatch={12}
                 />
             </ThemedView>
 
