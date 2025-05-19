@@ -7,28 +7,26 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { router } from "expo-router";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-export const Characters = ({characters}: { characters: CharacterRole[] }) => {
-    const iconColor = useThemeColor({light: 'black', dark: 'white'}, 'icon');
+export const Characters = ({ characters }: { characters: CharacterRole[] }) => {
+    const iconColor = useThemeColor({ light: 'black', dark: 'white' }, 'icon');
 
     if (!characters || characters.length === 0) return null;
 
     const handleCharacterPress = (id: number) => {
-        router.push({pathname: '/characters/[id]', params: {id}});
+        router.push({ pathname: '/characters/[id]', params: { id } });
     };
 
     const handleSeeAllPress = () => {
         router.push({
             pathname: '/(screens)/characters/Characters',
-            params: {headerText: 'Персонажи', ch: JSON.stringify(characters)},
+            params: { headerText: 'Персонажи', ch: JSON.stringify(characters) },
         });
     };
 
-    const renderItem = ({item}: { item: CharacterRole }) => {
-        const posterUrl = item.character?.poster?.mainUrl;
+    const renderItem = ({ item }: { item: CharacterRole }) => {
+        const posterUrl = item.character?.poster?.mainUrl || item.character?.poster?.originalUrl
 
-        if (!posterUrl) {
-            return <View style={styles.placeholder}/>;
-        }
+        const name = item.character?.russian || item.character?.name;
 
         return (
             <TouchableOpacity
@@ -37,10 +35,12 @@ export const Characters = ({characters}: { characters: CharacterRole[] }) => {
                 onPress={() => handleCharacterPress(item.character.id)}
             >
                 <View style={styles.imgShadow}>
-                    <Image source={{uri: posterUrl}} style={styles.characterImage} transition={300}/>
+                    <Image source={{ uri: posterUrl }} style={styles.characterImage} transition={300}>
+                        {!posterUrl && <IconSymbol name='questionmark' size={62} color={'white'} />}
+                    </Image>
                 </View>
                 <ThemedText type="subtitle" numberOfLines={1} style={styles.characterName}>
-                    {item.character.russian}
+                    {name}
                 </ThemedText>
             </TouchableOpacity>
         );
@@ -51,7 +51,7 @@ export const Characters = ({characters}: { characters: CharacterRole[] }) => {
             <View style={styles.header}>
                 <ThemedText type="title" style={styles.headerText}>Персонажи</ThemedText>
                 <TouchableOpacity onPressOut={handleSeeAllPress} hitSlop={styles.hitSlop}>
-                    <IconSymbol name="chevron.right" color={iconColor} size={24}/>
+                    <IconSymbol name="chevron.right" color={iconColor} size={24} />
                 </TouchableOpacity>
             </View>
 
@@ -95,13 +95,15 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 100,
-        backgroundColor:'gray',
+        backgroundColor: 'gray',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     imgShadow: {
         shadowColor: 'black',
         shadowOpacity: 0.65,
         shadowRadius: 3.25,
-        shadowOffset: {width: 0, height: 0},
+        shadowOffset: { width: 0, height: 0 },
     },
     characterName: {
         fontSize: 16,

@@ -11,6 +11,7 @@ import { getCharacter } from "@/api/shikimori/getCharacter";
 import { Character } from "@/interfaces/Shikimori.interfaces";
 import { Character as CharacterJikan, VoiceActor } from "@/interfaces/Jikan.interfaces";
 import { cleanedText } from "@/utils/cleanTextTags";
+import { IconSymbol } from "@/components/ui/IconSymbol";
 
 export default function CharacterScreen() {
     const { id } = useLocalSearchParams();
@@ -19,6 +20,8 @@ export default function CharacterScreen() {
     const [character, setCharacter] = useState<Character | null>(null);
     const [characterJikan, setCharacterJikan] = useState<CharacterJikan | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const posterUrl = character?.poster?.mainUrl || character?.poster?.originalUrl;
 
     const fetchCharacterData = async () => {
         try {
@@ -73,10 +76,13 @@ export default function CharacterScreen() {
         >
             <View style={{ flexDirection: "row" }}>
                 <Image
-                    source={{ uri: character.poster.mainUrl }}
-                    style={{ width: 180, height: 280, borderRadius: 8 }}
+                    source={{ uri: posterUrl }}
+                    priority="high"
+                    style={{ width: 180, height: 280, borderRadius: 8, backgroundColor: "gray", justifyContent: 'center', alignItems: 'center' }}
                     transition={300}
-                />
+                >
+                    {!posterUrl && <IconSymbol name='questionmark' size={62} color={'white'} />}
+                </Image>
                 <View style={{ flex: 1, paddingLeft: 10 }}>
                     <ThemedText type="title" style={{ fontSize: 18 }}>
                         Имя: {character.russian}
