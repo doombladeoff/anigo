@@ -111,7 +111,7 @@ export default function AnimeScreen() {
         const title = anime.russian || "";
 
         setTimeout(() => setButtonDisabled(false), 1000);
-        isFav ? removeFavorite(malId.toString()) : addFavorite({id: Number(malId), title, poster});
+        isFav ? removeFavorite(malId.toString()) : addFavorite({id: Number(malId), title, poster, createdAt: new Date().toISOString()});
         setIsFav((prev) => !prev);
         setButtonDisabled(true);
 

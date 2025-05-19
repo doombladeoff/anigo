@@ -20,6 +20,10 @@ type FavoritesContextType = {
     addFavorite: (anime: FavoriteItem) => Promise<void>;
     removeFavorite: (id: string) => Promise<void>;
     fetchFavorites: () => Promise<void>;
+    sortFavorite: () => void;
+    setFavorites: React.Dispatch<React.SetStateAction<FavoriteItem[]>>;
+    sortType: "asc" | "desc" | null;
+    setSortType: React.Dispatch<React.SetStateAction<"asc" | "desc" | null>>;
 };
 
 const FavoritesContext = createContext<FavoritesContextType | null>(null);
@@ -32,9 +36,28 @@ export const useFavorites = () => {
     return context;
 };
 
-export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
+export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-    const {user} = useAuth();
+    const [sortType, setSortType] = useState<"asc" | "desc" | null>(null);
+    const { user } = useAuth();
+
+    const sortFavorite = useCallback(() => {
+        if (!sortType) return;
+        setFavorites(prev => {
+            const sorted = [...prev].sort((a, b) => {
+                const aTime = new Date(a.createdAt).getTime();
+                const bTime = new Date(b.createdAt).getTime();
+                return sortType === "asc" ? aTime - bTime : bTime - aTime;
+            });
+            return sorted;
+        });
+    }, [sortType]);
+
+    useEffect(() => {
+        if (sortType !== null) {
+            sortFavorite();
+        }
+    }, [sortType]);
 
     const fetchFavorites = useCallback(async () => {
         if (!user) return;
@@ -65,9 +88,17 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({chil
                 poster: anime.poster,
             });
 
-            setFavorites((prev) => [...prev, anime]);
+            setFavorites(prev => {
+                const updated = [...prev, anime];
+                if (!sortType) return updated;
+                return updated.sort((a, b) => {
+                    const aTime = new Date(a.createdAt).getTime();
+                    const bTime = new Date(b.createdAt).getTime();
+                    return sortType === "asc" ? aTime - bTime : bTime - aTime;
+                });
+            });
         },
-        [user, isFavorite]
+        [user, isFavorite, sortType]
     );
 
     const removeFavorite = useCallback(
@@ -75,9 +106,17 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({chil
             if (!user) return;
 
             await removeFavoriteAnime(user.uid, Number(id));
-            fetchFavorites();
+            setFavorites(prev => {
+                const filtered = prev.filter(anime => anime.id !== Number(id));
+                if (!sortType) return filtered;
+                return filtered.sort((a, b) => {
+                    const aTime = new Date(a.createdAt).getTime();
+                    const bTime = new Date(b.createdAt).getTime();
+                    return sortType === "asc" ? aTime - bTime : bTime - aTime;
+                });
+            });
         },
-        [user]
+        [user, sortType]
     );
 
     const value = useMemo(() => ({
@@ -86,7 +125,21 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({chil
         addFavorite,
         removeFavorite,
         fetchFavorites,
-    }), [favorites, isFavorite, addFavorite, removeFavorite, fetchFavorites]);
+        sortFavorite,
+        setFavorites,
+        sortType,
+        setSortType,
+    }), [
+        favorites,
+        isFavorite,
+        addFavorite,
+        removeFavorite,
+        fetchFavorites,
+        sortFavorite,
+        setFavorites,
+        sortType,
+        setSortType,
+    ]);
 
     return (
         <FavoritesContext.Provider value={value}>
