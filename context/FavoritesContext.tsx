@@ -16,7 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 
 type FavoritesContextType = {
     favorites: FavoriteItem[];
-    isFavorite: (id: string) => boolean;
+    isFavorite: (id: number) => boolean;
     addFavorite: (anime: FavoriteItem) => Promise<void>;
     removeFavorite: (id: string) => Promise<void>;
     fetchFavorites: () => Promise<void>;
@@ -74,13 +74,13 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }, [user, fetchFavorites]);
 
     const isFavorite = useCallback(
-        (id: string) => favorites.some((anime) => anime.id === id),
+        (id: number) => favorites.some((anime) => anime.id === id),
         [favorites]
     );
 
     const addFavorite = useCallback(
         async (anime: FavoriteItem) => {
-            if (!user || isFavorite(anime.id.toString())) return;
+            if (!user || isFavorite(Number(anime.id))) return;
 
             await addFavoriteAnime(user.uid, {
                 id: Number(anime.id),
