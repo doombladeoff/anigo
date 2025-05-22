@@ -19,3 +19,9 @@ export const onScreenProps: RequestProps = {
   limit: 20,
   ...QLRequestDefaultProps,
 };
+
+export const defaultFilters: RequestProps = {
+  season: '!ancient',
+  kind: ['tv', 'movie', 'tv_special', 'ova'],
+  rating: ['pg_13', 'r', 'r_plus'],
+}

@@ -34,7 +34,7 @@ export interface RequestProps {
       r_plus - R+ - Mild Nudity (may also contain violence & profanity)
       rx - Rx - Hentai (extreme sexual content/nudity)
     */
-    rating?: ("none" | "g" | "pg" | "pg_13" | "r" | "r_plus" | "rx")[];
+    rating?: ("none" | "g" | "pg" | "pg_13" | "r" | "r_plus")[];
     page?: number;
     /* year (examples 2016, 2014_2016, summer_2017) */
     season?: string;
