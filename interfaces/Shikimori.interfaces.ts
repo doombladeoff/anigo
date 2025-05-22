@@ -30,6 +30,7 @@ export interface Poster {
     id: number;
     originalUrl: string;
     mainUrl: string;
+    main2xUrl: string;
 }
 
 export interface Genre {

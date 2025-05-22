@@ -72,7 +72,7 @@ export const AnimeList = ({
       }
     >
       <Image
-        source={{ uri: item.poster.originalUrl }}
+        source={{ uri: item.poster.main2xUrl }}
         style={{ width: size.width, height: size.height, borderRadius: 12 }}
         transition={400}
         cachePolicy="disk"

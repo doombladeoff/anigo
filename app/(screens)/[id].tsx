@@ -75,7 +75,27 @@ export default function AnimeScreen() {
     useEffect(() => {
         const fetchAnime = async () => {
             try {
-                const [animeData] = await getAnimeList({ids: malId.toString()});
+                const [animeData] = await getAnimeList({ids: malId.toString()}, {
+                    id: true,
+                     malId: true,
+                     externalLinks: {url: true},
+                     name: true,
+                     poster: {mainUrl: true, originalUrl: true, main2xUrl: true},
+                     russian: true,
+                     japanese: true,
+                     description: true,
+                     genres: {id: true, russian: true},
+                     characterRoles: {character: {
+                        id: true,
+                        name: true,
+                        russian: true,
+                        poster: { mainUrl: true }
+                     }},
+                     screenshots: {
+                        originalUrl: true
+                     },
+                    opengraphImageUrl: true
+                    });
                 setAnime(animeData);
 
                 const worldArtLink = animeData.externalLinks?.find((link: any) => link.url.startsWith('http://www.world-art.ru/'));
@@ -107,7 +127,7 @@ export default function AnimeScreen() {
     const handleBookmarkToggle = useCallback(async () => {
         if (buttonDisabled || !anime) return;
 
-        const poster = anime.poster.originalUrl || "";
+        const poster = anime.poster.mainUrl || "";
         const title = anime.russian || "";
 
         setTimeout(() => setButtonDisabled(false), 1000);
@@ -176,7 +196,7 @@ export default function AnimeScreen() {
                             }}
                         >
                             <Image
-                                source={{uri: anime.poster.originalUrl}}
+                                source={{uri: anime.poster.main2xUrl}}
                                 style={{
                                     width: 200,
                                     height: 300,
