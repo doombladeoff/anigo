@@ -1,7 +1,9 @@
-import { ScrollView, TextStyle, TouchableOpacity, View, ViewStyle } from "react-native";
+import { ScrollView, TextStyle, ViewStyle } from "react-native";
 import { Genre } from "@/interfaces/Shikimori.interfaces";
 import { ThemedText } from "@/components/ThemedText";
 import { router } from "expo-router";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { useSearchContext } from "@/context/SearchContext";
 
 interface GenresListProps {
     genres: Genre[];
@@ -22,6 +24,7 @@ export const GenresList = ({
     headerText = 'Genres',
     headerTextStyle
 }: GenresListProps) => {
+    const { setSearchResults } = useSearchContext();
     return (
         <>
             {headerShow && <ThemedText type="title" style={[{
@@ -32,13 +35,16 @@ export const GenresList = ({
                 {genres.map((genre, index) => {
                     return (
                         <TouchableOpacity style={genreStyle} key={index} activeOpacity={0.8} hitSlop={12}
-                                          onPress={() => router.push({
-                                              pathname: '/(screens)/animeListByGenre',
-                                              params: {genre_id: genre.id, genre_name: genre.russian}
-                                          })}>
+                            onPress={() => {
+                                setSearchResults([]);
+                                router.push({
+                                    pathname: '/(screens)/animeListByGenre',
+                                    params: { genre_id: genre.id, genre_name: genre.russian }
+                                })
+                            }}>
                             <ThemedText
                                 type="subtitle"
-                                style={[{fontSize: 14}, genreTextStyle]}
+                                style={[{ fontSize: 14 }, genreTextStyle]}
                                 key={index}
                             >{genre.russian}</ThemedText>
                         </TouchableOpacity>

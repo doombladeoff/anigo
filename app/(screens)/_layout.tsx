@@ -30,7 +30,7 @@ export default function ScreensLayout() {
                             activeOpacity={0.8}
                             onPress={() => {
                                 goBackSafe();
-                                setSearchResults([]);
+                                // setSearchResults([]);
                             }} hitSlop={{top: 30, right: 30, bottom: 30, left: 30}}
                         >
                             <FontAwesome6 name="arrow-left" size={28} color={iconColor}/>
