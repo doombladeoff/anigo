@@ -34,6 +34,7 @@ import { useFavorites } from "@/context/FavoritesContext";
 import { Comments } from "@/components/AnimeScreen/Comments";
 import { storage } from "@/utils/storage";
 import { Characters } from "@/components/AnimeScreen/Characters";
+import { Recommendations } from "@/components/AnimeScreen/Recommendations";
 
 const GRADIENT_COLORS = {
     dark: ["transparent", "rgba(18,18,18,0.85)", "rgba(18,18,18,0.95)", "rgba(18,18,18,1)"],
@@ -41,16 +42,16 @@ const GRADIENT_COLORS = {
 };
 
 export default function AnimeScreen() {
-    const {id: malId, isFavorite} = useLocalSearchParams();
+    const { id: malId, isFavorite } = useLocalSearchParams();
     const navigation = useNavigation();
 
     const hideComments = storage.getShowComments();
 
-    const {user} = useAuth();
-    const {addFavorite, removeFavorite} = useFavorites();
+    const { user } = useAuth();
+    const { addFavorite, removeFavorite } = useFavorites();
 
-    const {dark: isDark} = useTheme();
-    const iconColor = useThemeColor({light: "black", dark: "white"}, "icon");
+    const { dark: isDark } = useTheme();
+    const iconColor = useThemeColor({ light: "black", dark: "white" }, "icon");
 
     const [anime, setAnime] = useState<ShikimoriAnime | null>(null);
     const [loading, setLoading] = useState(true);
@@ -69,33 +70,35 @@ export default function AnimeScreen() {
 
     const scale = useSharedValue(1);
     const animatedStyle = useAnimatedStyle(() => ({
-        transform: [{scale: scale.value}],
+        transform: [{ scale: scale.value }],
     }));
 
     useEffect(() => {
         const fetchAnime = async () => {
             try {
-                const [animeData] = await getAnimeList({ids: malId.toString()}, {
+                const [animeData] = await getAnimeList({ ids: malId.toString() }, {
                     id: true,
-                     malId: true,
-                     externalLinks: {url: true},
-                     name: true,
-                     poster: {mainUrl: true, originalUrl: true, main2xUrl: true},
-                     russian: true,
-                     japanese: true,
-                     description: true,
-                     genres: {id: true, russian: true},
-                     characterRoles: {character: {
-                        id: true,
-                        name: true,
-                        russian: true,
-                        poster: { mainUrl: true }
-                     }},
-                     screenshots: {
+                    malId: true,
+                    externalLinks: { url: true },
+                    name: true,
+                    poster: { mainUrl: true, originalUrl: true, main2xUrl: true },
+                    russian: true,
+                    japanese: true,
+                    description: true,
+                    genres: { id: true, russian: true },
+                    characterRoles: {
+                        character: {
+                            id: true,
+                            name: true,
+                            russian: true,
+                            poster: { mainUrl: true }
+                        }
+                    },
+                    screenshots: {
                         originalUrl: true
-                     },
+                    },
                     opengraphImageUrl: true
-                    });
+                });
                 setAnime(animeData);
 
                 const worldArtLink = animeData.externalLinks?.find((link: any) => link.url.startsWith('http://www.world-art.ru/'));
@@ -120,7 +123,7 @@ export default function AnimeScreen() {
 
     useEffect(() => {
         if (anime?.name) {
-            navigation.setOptions({title: anime.name});
+            navigation.setOptions({ title: anime.name });
         }
     }, [anime]);
 
@@ -131,11 +134,11 @@ export default function AnimeScreen() {
         const title = anime.russian || "";
 
         setTimeout(() => setButtonDisabled(false), 1000);
-        isFav ? removeFavorite(malId.toString()) : addFavorite({id: Number(malId), title, poster, createdAt: new Date().toISOString()});
+        isFav ? removeFavorite(malId.toString()) : addFavorite({ id: Number(malId), title, poster, createdAt: new Date().toISOString() });
         setIsFav((prev) => !prev);
         setButtonDisabled(true);
 
-        scale.value = withSpring(1.2, {stiffness: 200}, () => {
+        scale.value = withSpring(1.2, { stiffness: 200 }, () => {
             scale.value = withSpring(1);
         });
 
@@ -143,13 +146,13 @@ export default function AnimeScreen() {
     }, [isFav, anime, buttonDisabled]);
 
     const handleWatchPress = () => {
-        scrollRef.current?.scrollTo({y: targetY.current - (targetY.current / 3), x: targetX.current, animated: true});
+        scrollRef.current?.scrollTo({ y: targetY.current - (targetY.current / 3), x: targetX.current, animated: true });
     };
 
     if (loading || !anime) {
         return (
-            <ThemedView style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
-                <Loader size={46}/>
+            <ThemedView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <Loader size={46} />
             </ThemedView>
         );
     }
@@ -159,12 +162,12 @@ export default function AnimeScreen() {
             <Stack.Screen
                 options={{
                     headerRight: () => {
-                        return <ShareButton text={anime?.russian} id={anime?.malId} iconColor={iconColor}/>
+                        return <ShareButton text={anime?.russian} id={anime?.malId} iconColor={iconColor} />
                     }
                 }}
             />
-            <KeyboardAvoidingView behavior={'padding'} style={{flex: 1}}>
-                <ThemedView style={{flex: 1}}>
+            <KeyboardAvoidingView behavior={'padding'} style={{ flex: 1 }}>
+                <ThemedView style={{ flex: 1 }}>
                     <ScrollView
                         ref={scrollRef}
                         contentContainerStyle={{
@@ -172,8 +175,8 @@ export default function AnimeScreen() {
                             paddingBottom: headerHeight / 2
                         }}>
                         <Image
-                            source={{uri: anime.poster.mainUrl}}
-                            style={{width: "100%", height: 520, position: "absolute"}}
+                            source={{ uri: anime.poster.mainUrl }}
+                            style={{ width: "100%", height: 520, position: "absolute" }}
                             blurRadius={3}
                             cachePolicy="disk"
                             priority="normal"
@@ -181,7 +184,7 @@ export default function AnimeScreen() {
 
                         <LinearGradient
                             colors={GRADIENT_COLORS[isDark ? "dark" : "light"] as [string, string, ...string[]]}
-                            style={{position: "absolute", width: "100%", height: 520}}
+                            style={{ position: "absolute", width: "100%", height: 520 }}
                         />
 
                         <View
@@ -190,13 +193,13 @@ export default function AnimeScreen() {
                                 borderRadius: 12,
                                 marginTop: 20,
                                 shadowColor: isDark ? 'white' : 'black',
-                                shadowOffset: {width: 0, height: 4},
+                                shadowOffset: { width: 0, height: 4 },
                                 shadowOpacity: isDark ? 0.35 : 0.55,
                                 shadowRadius: 15,
                             }}
                         >
                             <Image
-                                source={{uri: anime.poster.main2xUrl}}
+                                source={{ uri: anime.poster.main2xUrl }}
                                 style={{
                                     width: 200,
                                     height: 300,
@@ -211,7 +214,7 @@ export default function AnimeScreen() {
 
                         <ThemedText
                             type="title"
-                            style={{fontSize: 18, alignSelf: "center", marginTop: 15}}
+                            style={{ fontSize: 18, alignSelf: "center", marginTop: 15 }}
                             numberOfLines={2}
                         >
                             {anime.japanese}
@@ -243,7 +246,7 @@ export default function AnimeScreen() {
                                 <ThemedText
                                     darkColor="black"
                                     lightColor="white"
-                                    style={{fontSize: 16, fontWeight: "bold"}}
+                                    style={{ fontSize: 16, fontWeight: "bold" }}
                                 >
                                     Смотреть
                                 </ThemedText>
@@ -251,7 +254,7 @@ export default function AnimeScreen() {
 
                             {user &&
                                 <TouchableOpacity onPressOut={handleBookmarkToggle} hitSlop={12}
-                                                  disabled={buttonDisabled}>
+                                    disabled={buttonDisabled}>
                                     <Animated.View style={animatedStyle}>
                                         <FontAwesome
                                             name={isFav ? "bookmark" : "bookmark-o"}
@@ -265,28 +268,28 @@ export default function AnimeScreen() {
 
                         <GenresList
                             genres={anime.genres || []}
-                            containerStyle={{gap: 10, paddingHorizontal: 10, paddingBottom: 10}}
+                            containerStyle={{ gap: 10, paddingHorizontal: 10, paddingBottom: 10 }}
                             genreStyle={{
                                 backgroundColor: "rgba(255, 255, 255, 0.1)",
                                 padding: 5,
                                 borderRadius: 12
                             }}
-                            genreTextStyle={{padding: 5}}
-                            headerTextStyle={{paddingHorizontal: 10}}
+                            genreTextStyle={{ padding: 5 }}
+                            headerTextStyle={{ paddingHorizontal: 10 }}
                             headerShow={false}
                         />
 
-                        {anime.description && <Description text={anime.description}/>}
+                        {anime.description && <Description text={anime.description} />}
 
                         <ScreenshotsList
                             images={anime.screenshots || []}
                             horizontal
-                            imageStyle={{width: 280, height: 180, borderRadius: 12}}
-                            containerStyle={{paddingHorizontal: 10, gap: 10, paddingTop: 10}}
+                            imageStyle={{ width: 280, height: 180, borderRadius: 12 }}
+                            containerStyle={{ paddingHorizontal: 10, gap: 10, paddingTop: 10 }}
                         />
 
-                        <Characters characters={anime.characterRoles}/>
-                        
+                        <Characters characters={anime.characterRoles} />
+
                         <Player
                             malId={Number(anime.malId)}
                             worldArt_id={worldArtID ? Number(worldArtID) : undefined}
@@ -297,7 +300,10 @@ export default function AnimeScreen() {
                                 targetX.current = e.nativeEvent.layout.x;
                             }}
                         />
-                        {(!user || (!hideComments && user)) &&
+
+                        {user && <Recommendations id={Number(malId)} />}
+
+                        {(user || (!hideComments && user)) &&
                             <Comments
                                 animeId={malId.toString()}
                                 onLayout={(e) => {
