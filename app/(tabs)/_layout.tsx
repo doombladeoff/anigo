@@ -16,7 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function TabLayout() {
     const colorScheme = useColorScheme();
 
-    const {user} = useAuth()
+    const { user } = useAuth()
     const isSkip = storage.getSkip();
 
     return (
@@ -29,7 +29,7 @@ export default function TabLayout() {
                         headerShown: false,
                         tabBarButton: HapticTab,
                         tabBarShowLabel: false,
-                        tabBarIconStyle: {top: 10},
+                        tabBarIconStyle: { top: 10 },
                         tabBarBackground: TabBarBackground,
                         tabBarStyle: Platform.select({
                             ios: {
@@ -43,8 +43,18 @@ export default function TabLayout() {
                         name="(home)"
                         options={{
                             title: "Home",
-                            tabBarIcon: ({color}) => (
-                                <IconSymbol size={32} name="house.fill" color={color}/>
+                            tabBarIcon: ({ color }) => (
+                                <IconSymbol size={32} name="house.fill" color={color} />
+                            ),
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="(news)"
+                        options={{
+                            title: '',
+                            headerShown: false,
+                            tabBarIcon: ({ color }) => (
+                                <IconSymbol size={32} name='newspaper' color={color} />
                             ),
                         }}
                     />
@@ -55,10 +65,10 @@ export default function TabLayout() {
                             headerShown: true,
                             headerTransparent: true,
                             header: () => {
-                                return <SearchHeader/>;
+                                return <SearchHeader />;
                             },
-                            tabBarIcon: ({color}) => (
-                                <IconSymbol size={32} name="magnifyingglass" color={color}/>
+                            tabBarIcon: ({ color }) => (
+                                <IconSymbol size={32} name="magnifyingglass" color={color} />
                             ),
                         }}
                     />
@@ -66,8 +76,8 @@ export default function TabLayout() {
                         name="schedule"
                         options={{
                             title: "Schedule",
-                            tabBarIcon: ({color}) => (
-                                <IconSymbol size={32} name="calendar" color={color}/>
+                            tabBarIcon: ({ color }) => (
+                                <IconSymbol size={32} name="calendar" color={color} />
                             ),
                         }}
                     />
@@ -76,7 +86,7 @@ export default function TabLayout() {
                         options={{
                             title: "Profile",
                             headerShown: true,
-                            tabBarIcon: ({color, size, focused}) => {
+                            tabBarIcon: ({ color, size, focused }) => {
                                 return (
                                     <>
                                         {!isSkip ? (
@@ -87,7 +97,7 @@ export default function TabLayout() {
                                             }}>
                                                 {user?.avatarURL ? (
                                                     <Image
-                                                        source={user && {uri: user.avatarURL}}
+                                                        source={user && { uri: user.avatarURL }}
                                                         style={{
                                                             width: focused ? size : size + 5,
                                                             height: focused ? size : size + 5,
@@ -97,7 +107,7 @@ export default function TabLayout() {
                                                     />
                                                 ) : user?.photoURL ? (
                                                     <Image
-                                                        source={user && {uri: user?.photoURL}}
+                                                        source={user && { uri: user?.photoURL }}
                                                         style={{
                                                             width: focused ? size : size + 5,
                                                             height: focused ? size : size + 5,
@@ -107,11 +117,11 @@ export default function TabLayout() {
                                                     />
                                                 ) : (
                                                     <IconSymbol size={focused ? 20 : 28} name={'person.fill'} color={color}
-                                                                style={{margin: 4}}/>
+                                                        style={{ margin: 4 }} />
                                                 )}
                                             </View>
                                         ) : (
-                                            <IconSymbol size={32} name={'person.badge.key.fill'} color={color}/>
+                                            <IconSymbol size={32} name={'person.badge.key.fill'} color={color} />
                                         )}
                                     </>
                                 )
