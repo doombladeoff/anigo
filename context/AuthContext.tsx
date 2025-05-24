@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { auth, db } from "@/lib/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { YummyAPI } from '@/api/Yummy';
 
 export interface CustomUser extends User {
     avatarURL: string;
     lastAnime: number;
     lastAnimePoster: string;
-    lastEpisode: string
+    lastEpisode: string;
+    yummyToken: string;
+    yummyTokenDate: string;
 }
 
 type AuthContextType = {
@@ -20,7 +23,9 @@ const AuthContext = createContext<AuthContextType>({
     setUser: () => {},
 });
 
-export const AuthProvider = ({children}: { children: React.ReactNode }) => {
+const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<CustomUser | null>(null);
 
     useEffect(() => {
@@ -32,11 +37,38 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
             const userDocRef = doc(db, 'user-collection', user.uid);
             const unsubscribeSnapshot = onSnapshot(
                 userDocRef,
-                (docSnapshot) => {
+                async (docSnapshot) => {
                     if (!docSnapshot.exists()) return;
 
                     const userData = docSnapshot.data() as CustomUser;
-                    setUser(userData);
+
+                    const tokenDocRef = doc(db, 'yummy-tokens', 'tokenData');
+                    const tokenDoc = await getDoc(tokenDocRef);
+
+                    let yummyToken = '';
+                    let yummyTokenDate = '';
+
+                    if (tokenDoc.exists()) {
+                        const tokenData = tokenDoc.data();
+                        yummyToken = tokenData.token;
+                        yummyTokenDate = tokenData.date;
+
+                        if (tokenData) {
+                            const now = Date.now();
+                            const tokenDateMs = new Date(yummyTokenDate).getTime();
+                            if (!isNaN(tokenDateMs) && now - tokenDateMs < TWO_DAYS_MS) {
+                                console.log('Токен действителен')
+                            }
+                        } else {
+                            await YummyAPI.auth.refreshToken(yummyToken);
+                        }
+                    }
+
+                    setUser({
+                        ...userData,
+                        yummyToken,
+                        yummyTokenDate,
+                    });
 
                 },
                 (error) => console.error("Ошибка при подписке на изменения документа:", error)
@@ -53,7 +85,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{user, setUser}}>
+        <AuthContext.Provider value={{ user, setUser }}>
             {children}
         </AuthContext.Provider>
     );

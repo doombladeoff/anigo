@@ -13,10 +13,12 @@ import { useAuth } from '@/context/AuthContext';
 import { uploadAvatar, updateUserAvatar } from "@/utils/firebase/changeAvatar";
 import { addUser } from "@/utils/firebase/addUser";
 import * as ImagePicker from 'expo-image-picker';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { YummyAPI } from '@/api/Yummy';
 
 export const useGoogleAuth = () => {
-    const {setUser} = useAuth();
+    const { setUser } = useAuth();
     const router = useRouter();
     const [image, setImage] = useState<string | null>(null);
     const [isLoadImage, setLoad] = useState(false);
@@ -25,14 +27,41 @@ export const useGoogleAuth = () => {
         selectAccount: true,
         iosClientId: process.env.EXPO_PUBLIC_IOS_CLIENT_ID,
         webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
-        redirectUri: makeRedirectUri({scheme: 'com.f0rever.anigo'}),
+        redirectUri: makeRedirectUri({ scheme: 'com.f0rever.anigo' }),
     });
 
     const handleAuthSuccess = useCallback(
         async (user: any, userData: any = {}) => {
             try {
                 await addUser(user);
-                setUser(userData);
+
+                const tokenDocRef = doc(db, 'yummy-tokens', 'tokenData');
+                let tokenDoc = await getDoc(tokenDocRef);
+
+                let yummyToken = '';
+                let yummyTokenDate = new Date(0);
+
+                if (!tokenDoc.exists()) {
+                    await YummyAPI.auth.login();
+                    tokenDoc = await getDoc(tokenDocRef);
+
+                    if (tokenDoc.exists()) {
+                        const tokenData = tokenDoc.data();
+                        yummyToken = tokenData.token;
+                        yummyTokenDate = new Date(tokenData.date);
+                    }
+                } else {
+                    const tokenData = tokenDoc.data();
+                    yummyToken = tokenData.token;
+                    yummyTokenDate = new Date(tokenData.date);
+                }
+
+                setUser({
+                    ...userData,
+                    yummyToken,
+                    yummyTokenDate,
+                });
+
                 router.replace('/(tabs)/(home)');
             } catch (error) {
                 console.error("Failed to handle auth success:", error);
@@ -50,14 +79,14 @@ export const useGoogleAuth = () => {
     }, [handleAuthSuccess]);
 
     const loginToFirebase = useCallback(async (credentials: any) => {
-        const {user} = await signInWithCredential(auth, credentials);
+        const { user } = await signInWithCredential(auth, credentials);
         await authenticateUser(user);
     }, [authenticateUser]);
 
 
     const login = useCallback(async (email: string, password: string) => {
         try {
-            const {user} = await signInWithEmailAndPassword(auth, email, password);
+            const { user } = await signInWithEmailAndPassword(auth, email, password);
             await authenticateUser(user);
         } catch (error) {
             console.error("Login failed:", error);
@@ -67,9 +96,9 @@ export const useGoogleAuth = () => {
     const register = useCallback(async (username: string, email: string, password: string) => {
         try {
             const credentials = await createUserWithEmailAndPassword(auth, email, password);
-            const {user} = credentials;
-            await updateProfile(user, {displayName: username});
-            const userData = {displayName: username};
+            const { user } = credentials;
+            await updateProfile(user, { displayName: username });
+            const userData = { displayName: username };
             await handleAuthSuccess(user, userData);
         } catch (error) {
             console.error("Registration failed:", error);
@@ -106,5 +135,5 @@ export const useGoogleAuth = () => {
         }
     }, [image]);
 
-    return {request, promptAsync, pickImage, isLoadImage, login, register};
+    return { request, promptAsync, pickImage, isLoadImage, login, register };
 };
