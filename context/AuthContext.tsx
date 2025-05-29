@@ -58,9 +58,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             const tokenDateMs = new Date(yummyTokenDate).getTime();
                             if (!isNaN(tokenDateMs) && now - tokenDateMs < TWO_DAYS_MS) {
                                 console.log('Токен действителен')
+                            } else {
+                                console.log('Refresh_YummyAPI_Token...');
+                                await YummyAPI.auth.refreshToken(yummyToken);
                             }
                         } else {
-                            await YummyAPI.auth.refreshToken(yummyToken);
+                            console.log('Login to Yummuy API ...');
+                            await YummyAPI.auth.login();
                         }
                     }
 

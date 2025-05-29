@@ -34,7 +34,7 @@ export const refreshToken = async (token: string) => {
         const { data } = await axios.get('https://api.yani.tv/profile/token', {
             headers: { Authorization: `Bearer ${token}` }
         });
-        const newToken = data?.response;
+        const newToken = data?.response?.token;
         if (!newToken) throw new Error('Ошибка обновления токена');
         await saveTokenToFirebase(newToken);
     } catch (error: any) {
