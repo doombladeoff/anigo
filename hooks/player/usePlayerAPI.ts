@@ -17,6 +17,7 @@ export const usePlayerAPI = (malId: number, worldArt_id?: number, kinopoisk_id?:
     const [selectedEpisode, setSelectedEpisode] = useState<string | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [skipTime, setSkipTime] = useState<{ start: number; end: number } | null>(null);
+    const [isEmpty, setIsEmpty] = useState<boolean>(false);
 
     const fetchData = useCallback(async () => {
         tokenRef.current = tokenRef.current || (await KodikAPI.getToken());
@@ -32,6 +33,10 @@ export const usePlayerAPI = (malId: number, worldArt_id?: number, kinopoisk_id?:
             Object.entries(params).filter(([_, value]) => value != null)
         );
         const voiceData = await client.search(cleanedParams);
+        if (!voiceData || !voiceData.results || voiceData.results.length === 0) {
+            setIsEmpty(true);
+            return;
+        }
         const translations = voiceData.results.map(item => item.translation).filter(Boolean);
         setVoicers(translations);
         const savedVoicerId = storage.getEpisodeCaster(`${malId}`);
@@ -79,5 +84,6 @@ export const usePlayerAPI = (malId: number, worldArt_id?: number, kinopoisk_id?:
         setSelectedCaster,
         selectedEpisode,
         setSelectedEpisode,
+        isEmpty
     };
 };

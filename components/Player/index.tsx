@@ -1,27 +1,30 @@
 import { usePlayerAPI } from "@/hooks/player/usePlayerAPI";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { useVideoPlayer } from "expo-video";
 import { useEvent, useEventListener } from "expo";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LayoutChangeEvent, Pressable, StyleSheet, View } from "react-native";
-import { SelectPicker } from "@/components/SelectPicker";
-import { Loader } from "@/components/ui/Loader";
-import { ThemedText } from "@/components/ThemedText";
+import { LayoutChangeEvent, View } from "react-native";
 import { storage } from "@/utils/storage";
-import { FontAwesome6 } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { LastWatchAnime } from "@/utils/firebase/LastWatchAnime";
 import { useAuth } from "@/context/AuthContext";
 import { User } from "firebase/auth";
+import { NextEpisodePlaceholder } from "./NextEpisodePlaceholder";
+import { VideoPlayer } from "./VideoPlayer";
+import { EpisodeVoiceSelector } from "./EpisodeVoiceSelector";
 
 type PlayerProps = {
     malId: number;
     worldArt_id?: number;
     kinopoisk_id?: number;
     onLayout?: (e: LayoutChangeEvent) => void;
-    poster: string,
+    poster: string;
+    nextEpisode?: string | null;
+    currentAvailable?: number | null;
+    episodes?: number | null;
+
 };
 
-export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id, poster}: PlayerProps) => {
+export const Player = ({ malId, worldArt_id, onLayout, kinopoisk_id, poster, nextEpisode, currentAvailable, episodes: allEpisodes }: PlayerProps) => {
     const {
         voicers,
         episodes,
@@ -34,43 +37,56 @@ export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id, poster}: Pla
         selectedEpisode,
         setSelectedCaster,
         selectedCaster,
+        isEmpty,
     } = usePlayerAPI(malId, worldArt_id, kinopoisk_id);
 
-    const {user}= useAuth();
-    const isDark = useThemeColor({light: 'black', dark: 'white'}, 'background')
+    const { user } = useAuth();
+    const isDark = useThemeColor({ light: 'black', dark: 'white' }, 'background');
 
-    const playerRef = useRef<VideoView>(null);
+    const [isNextEpisode, setIsNextEpisode] = useState(false);
+    const selectedKey = useRef<number | null>(null);
     const hasSkippedRef = useRef(false);
+    const skipOpening = storage.getSkipOpening();
+
+    const [useNativeControls, setUseNativeControls] = useState(false);
+    const [showPlayButton, setShowPlayButton] = useState(true);
 
     const player = useVideoPlayer(videoUrl, player => {
         player.timeUpdateEventInterval = 1;
         player.currentTime = 0;
     });
 
-    const [useNativeControls, setUseNativeControls] = useState(false);
-    const [showPlayButton, setShowPlayButton] = useState(true);
-
-    const skipOpening = storage.getSkipOpening();
-
-    const {isPlaying} = useEvent(player, "playingChange", {isPlaying: player.playing});
-    const {status} = useEvent(player, "statusChange", {status: player.status});
+    const { isPlaying } = useEvent(player, "playingChange", { isPlaying: player.playing });
+    const { status } = useEvent(player, "statusChange", { status: player.status });
 
     const videoLoaded = useMemo(() => status === "readyToPlay", [status]);
 
-
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useEffect(() => { fetchData(); }, []);
 
     useEffect(() => {
         if (selectedCaster) fetchEpisodes(selectedCaster);
     }, [selectedCaster]);
 
     useEffect(() => {
-        if (selectedEpisode) fetchVideoUrl(selectedEpisode);
+        if (!selectedKey.current)
+            selectedKey.current = Number(selectedEpisode);
     }, [selectedEpisode]);
 
-    useEventListener(player, "timeUpdate", ({currentTime}) => {
+
+    useEffect(() => {
+        if (!selectedKey.current) return;
+
+        const key = selectedKey.current.toString();
+        const episodeExists = Object.prototype.hasOwnProperty.call(episodes, key);
+
+        setIsNextEpisode(!episodeExists);
+
+        if (episodeExists && selectedEpisode) {
+            fetchVideoUrl(selectedEpisode);
+        }
+    }, [selectedEpisode, episodes]);
+
+    useEventListener(player, "timeUpdate", ({ currentTime }) => {
         if (hasSkippedRef.current || !skipOpening || !skipTime) return;
 
         if (currentTime >= skipTime.start && currentTime <= skipTime.end) {
@@ -91,20 +107,30 @@ export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id, poster}: Pla
         storage.setEpisodeCaster(`${malId}`, selected.id.toString());
     }, [voicers, malId]);
 
-    const handleEpisodeChange = useCallback((key: string) => {
+    const handleEpisodeChange = useCallback((key: string, id: number) => {
         setSelectedEpisode(key);
         setShowPlayButton(true);
         setUseNativeControls(false);
         hasSkippedRef.current = false;
+        selectedKey.current = id;
         storage.setLastViewEpisode(`${malId}`, key);
     }, [malId]);
 
-    const episodeOptions = useMemo(() => (
-        Object.keys(episodes).map(key => ({
+    const episodeOptions = useMemo(() => {
+        const keys = Object.keys(episodes);
+        const options = keys.map(key => ({
             label: `Серия ${key}`,
             value: key,
-        }))
-    ), [episodes]);
+        }));
+
+        if (keys.length === allEpisodes) return options;
+        if (currentAvailable !== allEpisodes) {
+            const nextId = keys.length + 1;
+            options.push({ label: `Серия ${nextId}`, value: `${nextId}` });
+        };
+
+        return options;
+    }, [episodes, currentAvailable, allEpisodes]);
 
     const voicerOptions = useMemo(() => (
         voicers.map(v => ({
@@ -117,108 +143,37 @@ export const Player = ({malId, worldArt_id, onLayout, kinopoisk_id, poster}: Pla
         setUseNativeControls(true);
         setShowPlayButton(false);
         player.play();
-        await LastWatchAnime({user: user as User, id: malId, episode: selectedEpisode || '', poster})
+        if (user && selectedEpisode) {
+            await LastWatchAnime({ user: user as User, id: malId, episode: selectedEpisode, poster });
+        }
     };
 
+    if (isEmpty) return null;
+
     return (
-        <>
-            <View style={styles.container} onLayout={onLayout}>
-                <View style={styles.playerHeader}>
-                    <SelectPicker title="Серия" options={episodeOptions} onSelect={handleEpisodeChange}>
-                        <View style={[styles.selectItem, {shadowColor: isDark}]}>
-                            <ThemedText lightColor={'white'}>Серия</ThemedText>
-                            <ThemedText lightColor={'white'}>{selectedEpisode || "Не выбрано"}</ThemedText>
-                        </View>
-                    </SelectPicker>
-
-                    <SelectPicker title="Озвучка" options={voicerOptions} onSelect={handleVoicerSelect}>
-                        <View style={[styles.selectItem, {shadowColor: isDark}]}>
-                            <ThemedText lightColor={'white'}>Озвучка</ThemedText>
-                            <ThemedText lightColor={'white'}>{selectedCaster?.title || "Выбрать"}</ThemedText>
-                        </View>
-                    </SelectPicker>
-                </View>
-
-                <View>
-                    {videoUrl ? (
-                        <VideoView
-                            style={styles.video}
-                            player={player}
-                            allowsFullscreen
-                            allowsPictureInPicture
-                            contentFit='contain'
-                            startsPictureInPictureAutomatically
-                            nativeControls={useNativeControls}
-                            ref={playerRef}
-                            importantForAccessibility="no"
-                        />
-                    ) : (
-                        <View style={styles.loaderContainer}>
-                            <Loader size={42} color={'white'}/>
-                        </View>
-                    )}
-
-                    {!videoLoaded && (
-                        <View style={styles.overlay}>
-                            <Loader size={44} color={'white'}/>
-                        </View>
-                    )}
-
-                    {videoLoaded && showPlayButton && (
-                        <View style={styles.overlay}>
-                            <Pressable onPress={handlePlayPress} style={styles.iconShadow}>
-                                <FontAwesome6 name="play" size={44} color="white"/>
-                            </Pressable>
-                        </View>
-                    )}
-                </View>
+        <View style={{ marginTop: 10 }} onLayout={onLayout}>
+            <EpisodeVoiceSelector
+                selectedEpisode={selectedEpisode}
+                selectedCaster={selectedCaster}
+                episodeOptions={episodeOptions}
+                voicerOptions={voicerOptions}
+                onEpisodeSelect={handleEpisodeChange}
+                onVoicerSelect={handleVoicerSelect}
+                isDark={isDark}
+            />
+            <View>
+                {isNextEpisode ? (
+                    <NextEpisodePlaceholder nextEpisode={nextEpisode || null} episodesCount={Object.keys(episodes).length} />
+                ) :
+                    <VideoPlayer
+                        player={player}
+                        videoUrl={videoUrl}
+                        videoLoaded={videoLoaded}
+                        showPlayButton={showPlayButton}
+                        onPlayPress={handlePlayPress}
+                        nativeControls={useNativeControls}
+                    />}
             </View>
-        </>
+        </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        marginTop: 10,
-    },
-    video: {
-        width: "100%",
-        height: 275,
-    },
-    playerHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        padding: 10,
-    },
-    selectItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 10,
-        gap: 10,
-        backgroundColor: 'rgba(0,0,0,1)',
-        shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.45,
-        shadowRadius: 7,
-        borderRadius: 15,
-    },
-    loaderContainer: {
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        height: 275,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    overlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10,
-    },
-    iconShadow: {
-        shadowColor: 'black',
-        shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.65,
-        shadowRadius: 10,
-    }
-});
