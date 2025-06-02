@@ -6,11 +6,12 @@ import React, {
     useCallback,
     useMemo,
 } from "react";
-import { FavoriteItem } from "@/utils/storage";
+import { FavoriteItem } from "@/interfaces/FavoriteItem.interfaces";
 import {
     addFavoriteAnime,
     getFavoriteAnime,
     removeFavoriteAnime,
+    updateStatusFavoriteAnime
 } from "@/utils/firebase/userFavorite";
 import { useAuth } from "@/context/AuthContext";
 
@@ -19,6 +20,7 @@ type FavoritesContextType = {
     isFavorite: (id: number) => boolean;
     addFavorite: (anime: FavoriteItem) => Promise<void>;
     removeFavorite: (id: string) => Promise<void>;
+    updateStatus: (id: string, status: string) => Promise<void>;
     fetchFavorites: () => Promise<void>;
     sortFavorite: () => void;
     setFavorites: React.Dispatch<React.SetStateAction<FavoriteItem[]>>;
@@ -86,6 +88,7 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 id: Number(anime.id),
                 title: anime.title,
                 poster: anime.poster,
+                status: anime.status,
             });
 
             setFavorites(prev => {
@@ -119,11 +122,30 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         [user, sortType]
     );
 
+    const updateStatus = useCallback(
+        async (id: string, status: string) => {
+            if (!user) return;
+
+            try {
+                await updateStatusFavoriteAnime(user.uid, Number(id), status);
+                setFavorites(prev =>
+                    prev.map(anime =>
+                        anime.id === Number(id) ? { ...anime, status } : anime
+                    )
+                );
+            } catch (error) {
+                console.error("Ошибка при обновлении статуса:", error);
+            }
+
+        }, [user]
+    );
+
     const value = useMemo(() => ({
         favorites,
         isFavorite,
         addFavorite,
         removeFavorite,
+        updateStatus,
         fetchFavorites,
         sortFavorite,
         setFavorites,
@@ -134,6 +156,7 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isFavorite,
         addFavorite,
         removeFavorite,
+        updateStatus,
         fetchFavorites,
         sortFavorite,
         setFavorites,

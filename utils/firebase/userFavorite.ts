@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 /**
@@ -8,7 +8,7 @@ import { db } from "@/lib/firebase";
  */
 export const addFavoriteAnime = async (
     userId: string,
-    anime: { id: number; title: string, poster: string }
+    anime: { id: number; title: string, poster: string, status: string }
 ) => {
     try {
         const animeRef = doc(db, "user-collection", userId, "favorites", anime.id.toString());
@@ -18,17 +18,41 @@ export const addFavoriteAnime = async (
             title: anime.title,
             poster: anime.poster,
             createdAt: new Date().toISOString(),
+            status: anime.status
         });
 
-        console.log("Аниме добавлено в избранное");
+        console.log(`Аниме ${anime.title} добавлено в избранное пользователя ${userId}`);
+
     } catch (error) {
         console.error("Ошибка при добавлении избранного:", error);
     }
 };
 
+/**
+ * Удаляет аниме из избранного пользователя.
+ * @param userId - ID пользователя
+ * @param animeId - ID аниме
+ */
 export const removeFavoriteAnime = async (userId: string, animeId: number) => {
     const animeRef = doc(db, "user-collection", userId, "favorites", animeId.toString());
     await deleteDoc(animeRef);
+};
+
+/**
+ * Обновляет статус избранного аниме пользователя.
+ * @param userId - ID пользователя
+ * @param animeId - ID аниме
+ * @param status - новый статус (например: "смотрю", "завершено")
+ */
+export const updateStatusFavoriteAnime = async (userId: string, animeId: number, status: string) => {
+    const animeRef = doc(db, "user-collection", userId, "favorites", animeId.toString());
+    try {
+        await updateDoc(animeRef, {
+            status,
+        });
+    } catch (error) {
+        console.error("Ошибка при обновлении статуса:", error);
+    }
 };
 
 /**
