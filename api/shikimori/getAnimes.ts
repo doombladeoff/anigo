@@ -136,7 +136,7 @@ export const getAnimeList = async (
     ...(rating?.length && { rating: rating.join(",") }),
     order,
     season,
-    genre,
+    ...(genre?.length && { genre: genre.join(",") }),
     limit: adjustedLimit,
     page: pageDefault,
   };
