@@ -24,6 +24,7 @@ export interface ShikimoriAnime {
     description: string;
     airedOn: AiredOn;
     releasedOn: ReleasedOn;
+    crunchyroll: Crunchyroll;
 }
 
 export interface Poster {
@@ -119,4 +120,17 @@ export interface ExternalLinks {
     id: string;
     kind: string;
     url: string;
+}
+
+export interface Crunchyroll {
+    crunchyrollId: string | null,
+    crunchyAwards: {
+        text: string | null,
+        icon_url: string | null,
+    },
+    crunchyImages: {
+        img: string
+    },
+    hasTallThumbnail: boolean,
+    hasWideThumbnail: boolean
 }

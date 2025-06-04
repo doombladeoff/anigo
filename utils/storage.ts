@@ -6,6 +6,7 @@ const EPISODE_KEY_PREFIX = "last-episode-";
 const CASTER_KEY_PREFIX = "last-caster-";
 const FAVORITE_KEY_PREFIX = "favorite";
 const SKIP_KEY = "skip";
+const CRUNCHYROLL_KEY = "CRUNCHYROLL_byMal";
 
 export interface FavoriteItem {
     id: string | number;
@@ -35,6 +36,28 @@ export const storage = {
     //Casters
     setEpisodeCaster: (key: string, value: string) => mmkv.set(`${CASTER_KEY_PREFIX}$${key}`, value),
     getEpisodeCaster: (key: string) => mmkv.getString(`${CASTER_KEY_PREFIX}$${key}`),
+
+    //CRUNCHYROLL
+    setCrunchyroll: (data: any, id: number) => {
+        try {
+            const jsonString = JSON.stringify(data);
+            mmkv.set(`${CRUNCHYROLL_KEY}${id}`, jsonString);
+        } catch (error) {
+            console.error('Ошибка при сохранении данных Crunchyroll:', error);
+        }
+    },
+    getCrunchyroll: (id: number) => {
+        try {
+            const jsonString = mmkv.getString(`${CRUNCHYROLL_KEY}${id}`);
+            if (jsonString) {
+                return JSON.parse(jsonString);
+            }
+            return null;
+        } catch (error) {
+            console.error('Ошибка при получении данных Crunchyroll:', error);
+            return null;
+        }
+    },
 
     //Favorites
     saveFavorites: (array: FavoriteItem[]): boolean => {
