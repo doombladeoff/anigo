@@ -25,6 +25,10 @@ export interface ShikimoriAnime {
     airedOn: AiredOn;
     releasedOn: ReleasedOn;
     crunchyroll: Crunchyroll;
+    posterAniList: {
+        large: string,
+        extraLarge: string,
+    };
 }
 
 export interface Poster {
