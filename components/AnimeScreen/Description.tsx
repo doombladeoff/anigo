@@ -1,39 +1,45 @@
 import { ThemedText } from "@/components/ThemedText";
-import { TouchableOpacity } from "react-native";
 import { useRef, useState } from "react";
 import { cleanedText } from "@/utils/cleanTextTags";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { StyleProp, TextStyle, View, ViewStyle } from "react-native";
 
-const NUMBER_OF_LINES = 5
-export const Description = ({text}: { text: string }) => {
+interface DescriptionProps {
+    text: string;
+    containerStyle?: ViewStyle;
+    numberOfLines?: number
+    textStyle?: StyleProp<TextStyle>;
+    showExpanded?: boolean;
+}
+export const Description = ({ text, containerStyle, numberOfLines = 5, textStyle, showExpanded = true }: DescriptionProps) => {
 
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
     const lines = useRef<number>(0)
 
+    if (!text || text.length === 0) return;
+
     return (
-        <>
+        <View style={containerStyle}>
             <ThemedText
-                numberOfLines={isExpanded ? undefined : NUMBER_OF_LINES}
+                numberOfLines={isExpanded ? undefined : numberOfLines}
                 onTextLayout={(e) => {
-                    console.log(e.nativeEvent.lines.length);
                     lines.current = e.nativeEvent.lines.length
-                    console.log('cur',lines.current)
                 }}
-                type={'default'}
-                style={{paddingHorizontal: 10}}
+                style={textStyle ? textStyle : undefined}
             >
                 {cleanedText(text ?? '')}
                 {isExpanded &&
                     <ThemedText
-                        style={{color: '#e7b932', paddingHorizontal: 10}}
+                        style={textStyle ? textStyle : { color: '#e7b932', paddingHorizontal: 10 }}
                         onPress={() => setIsExpanded(!isExpanded)}
-                    > Show less</ThemedText>
+                    > Скрыть</ThemedText>
                 }
             </ThemedText>
-            {!isExpanded &&
+            {!isExpanded && showExpanded &&
                 <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)}>
-                    <ThemedText style={{color: '#e7b932', paddingHorizontal: 10}}>Read more</ThemedText>
+                    <ThemedText style={textStyle ? textStyle : { color: '#e7b932' }}>Больше</ThemedText>
                 </TouchableOpacity>
             }
-        </>
+        </View>
     )
 }
