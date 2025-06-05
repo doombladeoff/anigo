@@ -1,20 +1,19 @@
-import { memo, useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { Stack } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { runOnJS, SharedValue, useAnimatedReaction } from 'react-native-reanimated';
-import { ShareButton } from './ShareButton';
-import { View } from 'react-native';
 
 interface HeaderBlurProps {
     blurValue: SharedValue<number>;
-    isDark: boolean;
+    isDark?: boolean;
     iconColor: string;
     title: string;
-    malId: string | number;
-    headerLeft?: JSX.Element;
-    headerRight?: JSX.Element
+    malId?: string | number;
+    headerLeft?: ReactElement;
+    headerRight?: ReactElement;
+    showTitle?: boolean;
 }
-export const HeaderBlur = ({ blurValue, isDark, iconColor, title, malId, headerLeft, headerRight }: HeaderBlurProps) => {
+export const HeaderBlur = ({ blurValue, title, headerLeft, headerRight, showTitle = true }: HeaderBlurProps) => {
     const [intensity, setIntensity] = useState(0);
 
     useAnimatedReaction(
@@ -29,23 +28,11 @@ export const HeaderBlur = ({ blurValue, isDark, iconColor, title, malId, headerL
             options={{
                 headerBlurEffect: 'none',
                 headerBackground: () => (
-                    <BlurView style={{ flex: 1 }} intensity={intensity} tint={isDark ? 'dark' : 'light'} />
+                    <BlurView style={{ flex: 1 }} intensity={intensity} tint={'systemChromeMaterial'} />
                 ),
+                ...(title && { headerTitle: showTitle ? title : '' }),
                 ...(headerLeft && { headerLeft: () => headerLeft }),
-                ...(headerRight
-                    ? { headerRight: () => headerRight }
-                    : {
-                        headerRight: () => (
-                            <View style={{
-                                shadowColor: 'black',
-                                shadowOffset: { width: 0, height: 0 },
-                                shadowOpacity: 1,
-                                shadowRadius: 3
-                            }}>
-                                <ShareButton text={title} id={malId} iconColor={iconColor} />
-                            </View>
-                        )
-                    }
+                ...(headerRight && { headerRight: () => headerRight }
                 )
             }}
         />
