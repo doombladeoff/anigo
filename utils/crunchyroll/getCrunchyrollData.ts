@@ -85,7 +85,21 @@ export const getCrunchyrollIData = async (animeListData: any, malId: number): Pr
     await crunchy.login();
 
     const crunchyrollId = await processAnimeLinks(animeListData, animeListData?.streamingEpisodes, crunchy.accessToken ?? '');
-    if (!crunchyrollId) return null;
+    if (!crunchyrollId) {
+        const fallback = {
+            crunchyrollId,
+            crunchyAwards: {
+                text: null,
+                icon_url: null,
+            },
+            crunchyImages: { img: null },
+            hasTallThumbnail: false,
+            hasWideThumbnail: false,
+        };
+
+        storage.setCrunchyroll(fallback, malId);
+        return fallback;
+    }
 
     const seriesData = await crunchy.queryShowData(crunchyrollId, 'ru_RU', 'series')?.then(r => r.data?.[0]);
     if (!seriesData) return null;
