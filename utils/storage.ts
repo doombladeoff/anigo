@@ -1,3 +1,4 @@
+import { FavoriteItem } from "@/interfaces/FavoriteItem.interfaces";
 import { MMKV } from "react-native-mmkv";
 
 const mmkv = new MMKV();
@@ -8,12 +9,6 @@ const FAVORITE_KEY_PREFIX = "favorite";
 const SKIP_KEY = "skip";
 const CRUNCHYROLL_KEY = "CRUNCHYROLL_byMal";
 
-export interface FavoriteItem {
-    id: string | number;
-    title: string;
-    poster: string;
-    createdAt: string
-}
 
 export const storage = {
     // AUTH
