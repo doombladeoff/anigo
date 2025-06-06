@@ -1,9 +1,4 @@
-import {
-    ImageStyle,
-    Pressable,
-    ScrollView,
-    ViewStyle
-} from "react-native";
+import { ImageStyle, ScrollView, ViewStyle } from "react-native";
 import { Screenshot } from "@/interfaces/Shikimori.interfaces";
 import EnhancedImageViewing from "react-native-image-viewing";
 import { useEffect, useRef, useState } from "react";
@@ -11,9 +6,9 @@ import { ImageSource } from "react-native-image-viewing/dist/@types";
 import { ThemedText } from "@/components/ThemedText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import Skeleton from "@/components/ui/Skeleton";
 import { Image } from "expo-image";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 interface ScreenshotsListProps {
     images: Screenshot[];
@@ -23,7 +18,7 @@ interface ScreenshotsListProps {
     limitShow?: number;
 }
 
-export const ScreenshotsList = ({
+export const Screenshots = ({
     images,
     containerStyle,
     imageStyle,
@@ -37,13 +32,6 @@ export const ScreenshotsList = ({
     const [visible, setVisible] = useState<boolean>(false);
     const [displayIndex, setDisplayIndex] = useState<number>(0);
     const [loadedImages, setLoadedImages] = useState<boolean[]>(new Array(images.length).fill(false));
-
-    useEffect(() => {
-        const arr: Array<ImageSource> = images.map((item) => ({
-            uri: item.originalUrl,
-        }));
-        setImageViewerArr(arr);
-    }, [images]);
 
     useEffect(() => {
         const arr: Array<ImageSource> = images.map((item) => ({
@@ -76,47 +64,40 @@ export const ScreenshotsList = ({
             >
                 {images.slice(0, limitShow).map((image, index) => {
                     return (
-                        <Pressable key={index} onPress={() => {
-                            openViewer(index)
-                        }}>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            key={index} onPress={() => {
+                                openViewer(index)
+                            }}>
                             {!loadedImages[index] && (
-                                <Skeleton width={280} height={180} borderRadius={12}/>
+                                <Skeleton width={280} height={180} borderRadius={12} style={{position: 'absolute', zIndex: 200}} />
                             )}
                             <Image
-                                source={{uri: image.originalUrl}}
+                                source={{ uri: image.originalUrl }}
                                 style={imageStyle}
                                 onLoadEnd={() => handleImageLoad(index)}
                                 transition={1200}
                             />
-                        </Pressable>
+                        </TouchableOpacity>
                     )
                 })}
 
                 {limitShow <= images.length && (
-                    <Pressable
-                        style={{padding: 20, justifyContent: "center", alignItems: "center"}}
-                        onPress={() => openViewer(0)}
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        style={{ padding: 20, justifyContent: "center", alignItems: "center", flex: 1 }}
+                        onPress={() => openViewer(5)}
                     >
                         <ThemedText type="subtitle">+ {images.length - limitShow}</ThemedText>
-                        <LinearGradient
-                            colors={["rgba(0, 0, 0, 0)", "rgba(255, 255, 255, 0.2)", "rgba(255, 255, 255, 0.8)"]}
-                            style={{
-                                position: "absolute",
-                                width: 200,
-                                height: 40,
-                                left: -30,
-                                transform: [{rotateZ: "270deg"}],
-                            }}
-                        />
-                    </Pressable>
+                    </TouchableOpacity>
                 )}
             </ScrollView>
 
             {imageViewerArr.length > 0 && visible && (
                 <>
                     <BlurView
-                        style={{position: "absolute", top: 0, left: 0, right: 0, bottom: 0}}
-                        tint="regular"
+                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                        tint='dark'
                     />
                     <EnhancedImageViewing
                         images={imageViewerArr}
