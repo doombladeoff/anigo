@@ -17,16 +17,21 @@ export function useAnimeFavorite({ id, isFavoriteFromParams, favorites, statusPr
     const { status: statusParam } = useLocalSearchParams();
     const { setStatuss } = useAnimeStore();
 
-    const [isFavorite, setIsFavorite] = useState(isFavoriteFromParams === 'true');
+    const [isFavorite, setIsFavorite] = useState<boolean>(isFavoriteFromParams === "true");
 
     const initialStatus = useMemo(() => {
         const fromFavorites = favorites.find(f => f.id === Number(id))?.status;
         const statusValue = fromFavorites || (statusProp || statusParam) || '';
-        setStatuss(Array.isArray(statusValue) ? statusValue[0] : statusValue);
-        return fromFavorites || (statusProp || statusParam) || '';
+        return statusValue;
     }, [favorites, id, statusProp, statusParam]);
 
     const [status, setStatus] = useState(initialStatus);
+
+    useEffect(() => {
+        if (initialStatus) {
+            setStatuss(initialStatus as string);
+        }
+    }, [initialStatus]);
 
     useEffect(() => {
         const check = async () => {

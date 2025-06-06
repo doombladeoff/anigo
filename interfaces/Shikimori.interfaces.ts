@@ -8,7 +8,9 @@ export interface ShikimoriAnime {
     japanese: string;
     rating: string;
     score: string;
+    synonyms: string[];
     status: string;
+    duration: number;
     episodes: number;
     episodesAired: number;
     url: string;
@@ -29,6 +31,7 @@ export interface ShikimoriAnime {
         large: string,
         extraLarge: string,
     };
+    fandubbers: string[];
 }
 
 export interface Poster {
@@ -127,11 +130,11 @@ export interface ExternalLinks {
 }
 
 export interface Crunchyroll {
-    crunchyrollId: string | null,
+    crunchyrollId: string,
     crunchyAwards: {
-        text: string | null,
-        icon_url: string | null,
-    },
+        text: string,
+        icon_url: string,
+    }[],
     crunchyImages: {
         img: string
     },

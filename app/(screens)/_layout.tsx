@@ -1,15 +1,13 @@
 import { router, Stack } from "expo-router";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useNavigationState } from "@react-navigation/core";
-import { FontAwesome6 } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
-import { useSearchContext } from "@/context/SearchContext";
-import { GestureHandlerRootView, TouchableOpacity } from "react-native-gesture-handler";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { IconSymbol } from "@/components/ui/IconSymbol";
 
 export default function ScreensLayout() {
-    const {user} = useAuth();
-    const {setSearchResults} = useSearchContext();
-    const iconColor = useThemeColor({dark: 'white', light: 'black'}, 'icon');
+    const { user } = useAuth();
+    const iconColor = useThemeColor({ dark: 'white', light: 'black' }, 'icon');
 
     const navState = useNavigationState((state) => state);
     const goBackSafe = () => {
@@ -17,12 +15,11 @@ export default function ScreensLayout() {
     };
 
     return (
-        <GestureHandlerRootView style={{flex: 1}}>
         <Stack
             screenOptions={{
                 headerShown: true,
                 headerTransparent: true,
-                headerBlurEffect: "regular",
+                headerBlurEffect: 'regular',
                 headerTitle: '',
                 headerLeft: () => {
                     return (
@@ -30,30 +27,25 @@ export default function ScreensLayout() {
                             activeOpacity={0.8}
                             onPress={() => {
                                 goBackSafe();
-                                // setSearchResults([]);
-                            }} hitSlop={{top: 30, right: 30, bottom: 30, left: 30}}
+                            }} hitSlop={{ top: 30, right: 30, bottom: 30, left: 30 }}
+                            style={{ shadowColor: 'black', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 5, alignItems: 'center' }}
                         >
-                            <FontAwesome6 name="arrow-left" size={28} color={iconColor}/>
+                            <IconSymbol name='chevron.left' size={22} color={iconColor} />
                         </TouchableOpacity>
                     );
                 }
             }}
         >
 
-            <Stack.Screen name="[id]"/>
-            <Stack.Screen name="animeListByGenre"/>
-            {user ? <Stack.Screen name="favorites" options={{headerTitle: "Избранные"}}/> : null}
+            <Stack.Screen name="[id]" />
+            <Stack.Screen name="animeListByGenre" />
+            {user ? <Stack.Screen name="favorites" options={{ headerTitle: "Избранные" }} /> : null}
             <Stack.Screen
                 name="characters"
-                options={({ route }: { route: any }) => ({
-                    headerTitle: route.params?.headerText || 'Персонажи',
-                    headerBackTitle: "Back",
-                    headerShown: true,
-                    headerTransparent: true,
-                    headerBlurEffect: "regular",
-                })}
+                options={{
+                    headerShown: false
+                }}
             />
         </Stack>
-        </GestureHandlerRootView>
     );
 }
