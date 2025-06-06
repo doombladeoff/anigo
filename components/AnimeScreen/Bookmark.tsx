@@ -1,5 +1,5 @@
 import * as DropdownMenu from "zeego/dropdown-menu";
-import { animeStatuses } from "@/constants/Status";
+import { userStatus } from "@/constants/Status";
 import { FontAwesome } from "@expo/vector-icons";
 import Animated, { AnimatedStyle } from "react-native-reanimated";
 import { StyleProp, ViewStyle } from "react-native";
@@ -36,8 +36,8 @@ export const Bookmark = ({ disabled, inFavorite, onRemove, onAdd, animatedStyle,
             <DropdownMenu.Content>
                 {Object.entries(
                     isAnons
-                        ? { planned: animeStatuses.planned }
-                        : animeStatuses
+                        ? { planned: userStatus.planned }
+                        : userStatus
                 ).map(([key, { label, iconName, color }]) => (
                     <DropdownMenu.Item key={key} onSelect={() => onAdd(key)}>
                         <DropdownMenu.ItemTitle>{label}</DropdownMenu.ItemTitle>

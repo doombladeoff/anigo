@@ -5,7 +5,7 @@ import { Poster } from "@/components/AnimeScreen/Poster";
 import { ThemedText } from "@/components/ThemedText";
 import { Image } from "expo-image";
 import { ContextComponent } from "@/components/ContextComponent";
-import { animeStatuses } from "@/constants/Status";
+import { userStatus } from "@/constants/Status";
 import { FavoriteItem } from "@/interfaces/FavoriteItem.interfaces";
 import styles from './FavoritesScreen.styles';
 
@@ -77,7 +77,7 @@ export const FavoriteCard = ({
                             position: "absolute",
                             left: isListView ? 0 : 5,
                             right: isListView ? 0 : 5,
-                            backgroundColor: animeStatuses[item.status]?.color || "#888",
+                            backgroundColor: userStatus[item.status]?.color || "#888",
                             borderTopLeftRadius: 10,
                             borderTopRightRadius: 10,
                         }}
