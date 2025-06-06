@@ -1,6 +1,6 @@
 import { ReactElement, useState } from 'react';
 import { Stack } from 'expo-router';
-import { BlurView } from 'expo-blur';
+import { BlurTint, BlurView } from 'expo-blur';
 import { runOnJS, SharedValue, useAnimatedReaction } from 'react-native-reanimated';
 
 interface HeaderBlurProps {
@@ -12,8 +12,9 @@ interface HeaderBlurProps {
     headerLeft?: ReactElement;
     headerRight?: ReactElement;
     showTitle?: boolean;
+    tint?: BlurTint;
 }
-export const HeaderBlur = ({ blurValue, title, headerLeft, headerRight, showTitle = true }: HeaderBlurProps) => {
+export const HeaderBlur = ({ blurValue, title, headerLeft, headerRight, showTitle = true, tint = 'systemChromeMaterial' }: HeaderBlurProps) => {
     const [intensity, setIntensity] = useState(0);
 
     useAnimatedReaction(
@@ -28,7 +29,7 @@ export const HeaderBlur = ({ blurValue, title, headerLeft, headerRight, showTitl
             options={{
                 headerBlurEffect: 'none',
                 headerBackground: () => (
-                    <BlurView style={{ flex: 1 }} intensity={intensity} tint={'systemChromeMaterial'} />
+                    <BlurView style={{ flex: 1 }} intensity={intensity} tint={tint} />
                 ),
                 ...(title && { headerTitle: showTitle ? title : '' }),
                 ...(headerLeft && { headerLeft: () => headerLeft }),
