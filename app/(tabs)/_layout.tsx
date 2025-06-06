@@ -1,5 +1,5 @@
 import React from "react";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import { Platform, View } from "react-native";
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -7,9 +7,11 @@ import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AnimeListProvider } from "@/context/AnimeListContext";
-import { Image } from "expo-image";
+import { Image, ImageStyle } from "expo-image";
 import { storage } from "@/utils/storage";
 import { CustomUser, useAuth } from "@/context/AuthContext";
+import { ContextComponent } from "@/components/ContextComponent";
+import { auth } from "@/lib/firebase";
 
 type UserImageProps = {
     user: CustomUser;
@@ -18,11 +20,12 @@ type UserImageProps = {
 };
 
 const UserImage = ({ user, size, focused }: UserImageProps) => {
-    const imageStyle = React.useMemo(() => ({
+    const imageStyle: ImageStyle = React.useMemo(() => ({
         width: focused ? size : size + 5,
         height: focused ? size : size + 5,
         margin: 2,
         borderRadius: 25,
+        backgroundColor: 'gray'
     }), [size, focused]);
 
     return (
@@ -30,6 +33,8 @@ const UserImage = ({ user, size, focused }: UserImageProps) => {
             source={{ uri: user.avatarURL }}
             style={imageStyle}
             autoplay={false}
+            cachePolicy={'memory-disk'}
+            transition={400}
         />
     );
 };
@@ -48,7 +53,25 @@ const ProfileIcon = React.memo(({ user, focused, size, color, isSkip }: { user?:
                     borderColor: focused ? "#e7b932" : "transparent",
                 }}
             >
-                <UserImage user={user} size={size} focused={focused} />
+                <ContextComponent
+                    items={[
+                        {
+                            key: `logout-key`,
+                            title: '',
+                            subtitle: 'Выйти',
+                            iconName: 'rectangle.portrait.and.arrow.right.fill',
+                            iconColor: 'red',
+                            onItemPress: async () => {
+                                auth.signOut()
+                                router.push({
+                                    pathname: '/(auth)'
+                                })
+                            }
+                        }
+                    ]}
+                >
+                    <UserImage user={user} size={size} focused={focused} />
+                </ContextComponent>
             </View>
         );
     }
@@ -65,7 +88,7 @@ export default function TabLayout() {
         <AnimeListProvider>
             <Tabs
                 screenOptions={{
-                    animation: "fade",
+                    animation: 'shift',
                     tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
                     headerShown: false,
                     tabBarButton: HapticTab,
