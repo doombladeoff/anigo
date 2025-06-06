@@ -1,5 +1,6 @@
-import { Share, TouchableOpacity } from "react-native";
-import { FontAwesome6 } from "@expo/vector-icons";
+import { Share } from "react-native";
+import { IconSymbol } from "./IconSymbol";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 interface ShareButtonProps {
     text: string;
@@ -21,8 +22,8 @@ const onShare = async ({text, id}: ShareButtonProps) => {
 
 export const ShareButton = ({text, id, iconColor = 'white'}: ShareButtonProps) => {
     return (
-        <TouchableOpacity hitSlop={12} onPress={() => onShare({text, id})} style={{paddingBottom: 10}}>
-            <FontAwesome6 name="share" size={28} color={iconColor}/>
+        <TouchableOpacity hitSlop={12} onPress={() => onShare({text, id})} activeOpacity={0.8} style={{alignItems: 'center'}}>
+            <IconSymbol name='arrowshape.turn.up.forward.fill' size={26} color={iconColor}/>
         </TouchableOpacity>
     )
 }
