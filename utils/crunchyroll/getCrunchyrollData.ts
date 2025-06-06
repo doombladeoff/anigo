@@ -112,14 +112,11 @@ export const getCrunchyrollIData = async (animeListData: any, malId: number): Pr
         fetch(getLinks(crunchyrollId, ScreenWidth * 3, ScreenHeight * 3).titleThumbnail).then(r => r.status === 200),
     ]);
 
-    const awards = seriesData.awards?.[0] ?? {};
+    const awards = seriesData.awards ?? [];
 
     const crunchyData = {
         crunchyrollId,
-        crunchyAwards: {
-            text: awards.text ?? null,
-            icon_url: awards.icon_url ?? null,
-        },
+        crunchyAwards: awards,
         crunchyImages: { img },
         hasTallThumbnail: thumbTall,
         hasWideThumbnail: thumbWide,
