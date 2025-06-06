@@ -12,6 +12,7 @@ export const createScrollHandler = (sharedValue: SharedValue<number>, intensity:
     return (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const y = event.nativeEvent.contentOffset.y;
         const newValue = Math.round(Math.min(100, (y / 400) * intensity));
+        if (newValue < 0) return;
         sharedValue.value = newValue;
     };
 };
