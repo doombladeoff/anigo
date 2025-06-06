@@ -23,6 +23,7 @@ export default function RootLayout() {
                                 <Stack.Screen name="(screens)" />
                                 <Stack.Screen name="+not-found" />
                                 <Stack.Screen name="(modal)" options={{ presentation: 'modal', headerShown: false }} />
+                                <Stack.Screen name="(modal)" options={{ presentation: 'fullScreenModal', headerShown: false }} />
                             </Stack>
                             <StatusBar style="auto" />
                         </ApolloProvider>
